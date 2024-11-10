@@ -1,0 +1,131 @@
+import axios from "axios";
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { getCookie, deleteCookie } from "cookies-next";
+
+export async function getServerSideProps() {
+  const bannersRes = await axios.get(
+    "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/banners",
+    {
+      headers: {
+        apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+      },
+    }
+  );
+
+  const promotionsRes = await axios.get(
+    "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/promos",
+    {
+      headers: {
+        apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+      },
+    }
+  );
+
+  const categoriesRes = await axios.get(
+    "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/categories",
+    {
+      headers: {
+        apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+      },
+    }
+  );
+
+  const activitiesRes = await axios.get(
+    "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/activities",
+    {
+      headers: {
+        apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+      },
+    }
+  );
+
+  return {
+    props: {
+      banners: bannersRes.data.data,
+      promotions: promotionsRes.data.data,
+      categories: categoriesRes.data.data,
+      activity: activitiesRes.data.data,
+    },
+  };
+}
+
+const Home = ({ banners, promotions, categories, activity }) => {
+  const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [cart, setCart] = useState([]);
+
+  const addToCart = (promo) => {
+    setCart((prevCart) => [...prevCart, promo]);
+  };
+
+  return (
+    <div className="min-h-screen p-6 text-gray-900 bg-gray-100">
+      <h1 className="mb-4 text-3xl font-extrabold text-center text-blue-600">
+        Explore Amazing Offers
+      </h1>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-2xl font-semibold text-blue-500">
+          Current Promotions
+        </h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {promotions.map((promo, index) => (
+            <div
+              key={promo.id}
+              className="p-4 transition duration-300 transform bg-white rounded-lg shadow-lg hover:scale-105 hover:shadow-xl"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <img
+                src={promo.imageUrl}
+                alt={promo.title}
+                className="object-cover w-full h-48 rounded"
+              />
+              <div className="mt-4">
+                <h3 className="text-lg font-bold text-gray-800">
+                  {promo.title}
+                </h3>
+                <p className="text-sm text-gray-600">{promo.description}</p>
+                <p className="font-bold text-green-500">
+                  Discount: {promo.promo_discount_price}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Min Claim: {promo.minimum_claim_price}
+                </p>
+                <p className="text-sm font-semibold text-blue-500">
+                  Promo Code: {promo.promo_code}
+                </p>
+                <button
+                  onClick={() => addToCart(promo)}
+                  className="px-4 py-2 mt-4 font-semibold text-white bg-blue-500 rounded hover:bg-blue-600"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {errorMessage && (
+        <p className="my-4 text-center text-red-500">{errorMessage}</p>
+      )}
+
+      {/* Cart Section */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-2xl font-semibold text-blue-500">
+          Cart ({cart.length} items)
+        </h2>
+        <ul className="list-disc list-inside">
+          {cart.map((item, index) => (
+            <li key={index} className="text-gray-800">
+              {item.title} - {item.promo_code}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+};
+
+export default Home;
