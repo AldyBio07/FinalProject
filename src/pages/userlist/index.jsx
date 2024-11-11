@@ -3,6 +3,7 @@ import { getCookie, deleteCookie } from "cookies-next";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { useState, useRef } from "react";
+import { uploadImage } from "@/helper/uploadImage";
 export async function getServerSideProps({ req, res }) {
   const token = getCookie("token", { req, res });
 
@@ -60,14 +61,28 @@ const UserList = ({ users }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // Change this to adjust how many items are displayed per page
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-    //Manggil API UPLOAD/////////////////////
-    setUpdatedInfo((prev) => ({
-      ...prev,
-      profilePictureUrl: URL.createObjectURL(selectedFile),
-    }));
+    setFile(selectedFile); // Store the selected file in state for future use
+
+    if (!selectedFile) {
+      return;
+    }
+
+    try {
+      // Upload the image and get the URL
+      const uploadedImageUrl = await uploadImage(selectedFile);
+      console.log("Uploaded image URL:", uploadedImageUrl);
+
+      // Update the profile picture URL in the state to display the image preview immediately
+      setUpdatedInfo((prev) => ({
+        ...prev,
+        profilePictureUrl: uploadedImageUrl,
+      }));
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert(`Failed to upload image: ${error.message}`);
+    }
   };
   const handleLogout = () => {
     deleteCookie("token");
@@ -126,51 +141,9 @@ const UserList = ({ users }) => {
     }
   };
 
-  const uploadImage = async () => {
-    if (!file) {
-      console.error("No file selected");
-      return null;
-    }
-
-    const api =
-      "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image";
-    const apiKey = "24405e01-fbc1-45a5-9f5a-be13afcd757c";
-    const token = getCookie("token"); // Gunakan getCookie untuk mendapatkan token
-
-    const config = {
-      headers: {
-        apiKey: apiKey,
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
-    };
-
-    const formData = new FormData();
-    formData.append("image", file);
-
-    try {
-      const response = await axios.post(api, formData, config);
-      console.log("Upload successful:", response.data);
-      return response.data.data.url; // Sesuaikan dengan struktur response API
-    } catch (error) {
-      console.error("Upload error:", error.response?.data || error.message);
-      throw error;
-    }
-  };
-
   const handleUpdateUserInfo = async () => {
     try {
       let profilePictureUrl = updatedInfo.profilePictureUrl;
-
-      // Jika ada file yang dipilih, upload terlebih dahulu
-      if (file) {
-        try {
-          profilePictureUrl = await uploadImage();
-        } catch (uploadError) {
-          alert(`Gagal mengunggah gambar: ${uploadError.message}`);
-          return;
-        }
-      }
 
       // Persiapkan data untuk update
       const updateData = {
@@ -180,7 +153,7 @@ const UserList = ({ users }) => {
 
       // Kirim update profil
       await axios.post(
-        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-profile/${selectedUser.id}`,
+        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-profile`,
         updateData,
         {
           headers: {

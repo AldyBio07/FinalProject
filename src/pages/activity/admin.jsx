@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
+import { uploadImage } from "@/helper/uploadImage";
 
 export async function getServerSideProps({ req, res }) {
   const token = getCookie("token", { req, res });
@@ -260,6 +261,29 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
     currentPage * itemsPerPage
   );
 
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) {
+      return;
+    }
+
+    try {
+      // Upload the image and get the URL
+      const uploadedImageUrl = await uploadImage(selectedFile);
+      console.log("Uploaded image URL:", uploadedImageUrl);
+
+      // Update the profile picture URL in the state to display the image preview immediately
+      setFormData((prev) => ({
+        ...prev,
+        imageUrls: [uploadedImageUrl],
+      }));
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert(`Failed to upload image: ${error.message}`);
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 bg-gray-100">
       <header className="flex items-center justify-between py-4 mb-6 text-white bg-blue-600">
@@ -322,10 +346,13 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="p-6 bg-white rounded-lg shadow-lg w-96">
-            <h2 className="mb-4 text-xl font-bold">
+            <h2 className="mb-4 text-xl font-bold text-black">
               {isEditing ? "Edit Aktivitas" : "Tambah Aktivitas"}
             </h2>
-            <form onSubmit={isEditing ? updateActivity : createActivity}>
+            <form
+              className="text-black"
+              onSubmit={isEditing ? updateActivity : createActivity}
+            >
               <div className="mb-4">
                 <label className="block mb-2" htmlFor="title">
                   Judul Aktivitas
@@ -395,36 +422,20 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
                   ))}
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block mb-2">URL Gambar</label>
-                {formData.imageUrls.map((url, index) => (
-                  <div key={index} className="flex mb-2">
-                    <input
-                      type="text"
-                      value={url}
-                      onChange={(e) =>
-                        handleImageUrlChange(index, e.target.value)
-                      }
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImageUrlInput(index)}
-                      className="ml-2 text-red-500"
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addImageUrlInput}
-                  className="text-blue-500"
-                >
-                  + Tambah URL Gambar
-                </button>
+              <div className="mb-4 text-center">
+                <img
+                  src={formData.imageUrls[0]}
+                  alt="Profile"
+                  className="object-cover w-32 h-32 mx-auto mb-2 rounded-full"
+                />
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="w-full p-2 border rounded"
+                />
               </div>
+
               <div className="flex justify-end">
                 <button
                   type="button"

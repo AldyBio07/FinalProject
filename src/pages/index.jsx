@@ -115,7 +115,7 @@ const Home = () => {
             <div className="relative flex flex-col items-start justify-center h-full px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
               <h1 className="max-w-2xl mb-4 text-4xl font-bold text-white md:text-6xl">
                 Discover Your Next
-                <span className="block mt-2 text-blue-400">Adventure</span>
+                <span className="block mt-2 text-blue-400">Journey</span>
               </h1>
               <p className="max-w-xl mb-8 text-lg text-gray-300 md:text-xl">
                 {data.banners[0].description}

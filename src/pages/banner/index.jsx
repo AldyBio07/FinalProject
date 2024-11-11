@@ -303,13 +303,13 @@ const BannerManagement = ({ initialBanners = [], token }) => {
 
       {/* Modal for Create/Edit Banner */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center text-black">
           <div className="p-6 bg-white rounded-lg shadow-lg w-96">
             <h2 className="mb-4 text-xl font-bold">
               {isEditing ? "Edit Banner" : "Tambah Banner"}
             </h2>
             <form onSubmit={isEditing ? updateBanner : createBanner}>
-              <div className="mb-4">
+              <div className="mb-4 ">
                 <label className="block mb-2" htmlFor="name">
                   Nama Banner
                 </label>

@@ -9,8 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@nextui-org/button": "^2.0.38",
+    "@nextui-org/card": "^2.0.34",
+    "@nextui-org/input": "^2.2.5",
+    "@nextui-org/react": "^2.4.8",
+    "@nextui-org/shared-icons": "^2.0.9",
     "axios": "^1.7.7",
     "cookies-next": "^4.3.0",
+    "flowbite": "^2.5.2",
+    "flowbite-react": "^0.10.2",
+    "framer-motion": "^11.11.11",
     "lucide-react": "^0.456.0",
     "next": "15.0.1",
     "react": "19.0.0-rc-69d4b800-20241021",
