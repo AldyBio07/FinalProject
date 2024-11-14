@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { getCookie } from "cookies-next";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export async function getServerSideProps({ req, res }) {
   const token = getCookie("token", { req, res });
@@ -154,88 +156,99 @@ const ActivityList = ({ activities = [], token }) => {
     currentPage * itemsPerPage
   );
 
+  const Layout = ({ children, userRole }) => {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar role={userRole} />
+        <main className="flex-grow pt-16">{children}</main>
+        <Footer role={userRole} />
+      </div>
+    );
+  };
   return (
     <div className="min-h-screen p-6 text-gray-900 bg-gray-100">
-      <h1 className="mb-4 text-3xl font-extrabold text-center text-blue-600">
-        Activity List
-      </h1>
+      <Layout userRole="user">
+        <h1 className="mb-4 text-3xl font-extrabold text-center text-blue-600">
+          Activity List
+        </h1>
 
-      {/* Category Filter Dropdown */}
-      <div className="mb-6">
-        <label htmlFor="categoryFilter" className="mr-2 font-medium">
-          Filter by Category:
-        </label>
-        <select
-          id="categoryFilter"
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          className="p-2 text-gray-700 bg-white border rounded-lg"
-        >
-          {categories.map((category, index) => (
-            <option key={index} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Notification */}
-      {notification && (
-        <div className="fixed top-0 right-0 p-3 m-4 text-white bg-green-500 rounded-lg shadow-lg">
-          {notification}
+        {/* Category Filter Dropdown */}
+        <div className="mb-6">
+          <label htmlFor="categoryFilter" className="mr-2 font-medium">
+            Filter by Category:
+          </label>
+          <select
+            id="categoryFilter"
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="p-2 text-gray-700 bg-white border rounded-lg"
+          >
+            {categories.map((category, index) => (
+              <option key={index} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
 
-      {/* Activity Cards */}
-      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-        {paginatedActivities.map((activity) => (
-          <div
-            key={activity.id}
-            className="overflow-hidden transition duration-300 transform bg-white rounded-lg shadow-lg hover:scale-105 hover:shadow-xl"
-          >
-            <img
-              src={activity.imageUrls[0]}
-              alt={activity.title}
-              className="object-cover w-full h-48 rounded-t-lg"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-bold text-gray-800">
-                {activity.title}
-              </h3>
-              <h3 className="text-sm text-gray-600">
-                {activity.price_discount}
-              </h3>
-              <p className="text-sm text-gray-600">{activity.price}</p>
-              <p className="mt-2 text-sm text-gray-600">
-                {typeof activity.description === "string"
-                  ? activity.description
-                  : JSON.stringify(activity.description)}
-              </p>
-              <button
-                onClick={() => handleAddToCart(activity)}
-                className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
-              >
-                Add to Cart
-              </button>
-            </div>
+        {/* Notification */}
+        {notification && (
+          <div className="fixed top-0 right-0 p-3 m-4 text-white bg-green-500 rounded-lg shadow-lg">
+            {notification}
           </div>
-        ))}
-      </section>
+        )}
 
-      {/* Pagination Controls */}
-      <div className="flex justify-center mt-6">
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button
-            key={index + 1}
-            onClick={() => setCurrentPage(index + 1)}
-            className={`px-3 py-1 mx-1 font-semibold text-white rounded ${
-              currentPage === index + 1 ? "bg-blue-500" : "bg-gray-500"
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>
+        {/* Activity Cards */}
+        <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {paginatedActivities.map((activity) => (
+            <div
+              key={activity.id}
+              className="overflow-hidden transition duration-300 transform bg-white rounded-lg shadow-lg hover:scale-105 hover:shadow-xl"
+            >
+              <img
+                src={activity.imageUrls[0]}
+                alt={activity.title}
+                className="object-cover w-full h-48 rounded-t-lg"
+              />
+              <div className="p-4">
+                <h3 className="text-lg font-bold text-gray-800">
+                  {activity.title}
+                </h3>
+                <h3 className="text-sm text-gray-600">
+                  {activity.price_discount}
+                </h3>
+                <p className="text-sm text-gray-600">{activity.price}</p>
+                <p className="mt-2 text-sm text-gray-600">
+                  {typeof activity.description === "string"
+                    ? activity.description
+                    : JSON.stringify(activity.description)}
+                </p>
+                <button
+                  onClick={() => handleAddToCart(activity)}
+                  className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-center mt-6">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index + 1}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-3 py-1 mx-1 font-semibold text-white rounded ${
+                currentPage === index + 1 ? "bg-blue-500" : "bg-gray-500"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+      </Layout>
     </div>
   );
 };

@@ -426,7 +426,7 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
                 <img
                   src={formData.imageUrls[0]}
                   alt="Profile"
-                  className="object-cover w-32 h-32 mx-auto mb-2 rounded-full"
+                  className="object-cover w-32 h-32 mx-auto mb-2"
                 />
                 <input
                   type="file"

@@ -72,7 +72,6 @@ const UserList = ({ users }) => {
     try {
       // Upload the image and get the URL
       const uploadedImageUrl = await uploadImage(selectedFile);
-      console.log("Uploaded image URL:", uploadedImageUrl);
 
       // Update the profile picture URL in the state to display the image preview immediately
       setUpdatedInfo((prev) => ({

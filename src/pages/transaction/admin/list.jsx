@@ -42,7 +42,7 @@ export async function getServerSideProps({ req, res }) {
   }
 }
 
-const Transaction = ({ transactions, error }) => {
+const ListTransaction = ({ transactions, error }) => {
   const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState("");
   const [searchTitle, setSearchTitle] = useState("");
@@ -226,4 +226,4 @@ const Transaction = ({ transactions, error }) => {
   );
 };
 
-export default Transaction;
+export default ListTransaction;

@@ -9,11 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.1.7",
     "@nextui-org/button": "^2.0.38",
     "@nextui-org/card": "^2.0.34",
     "@nextui-org/input": "^2.2.5",
     "@nextui-org/react": "^2.4.8",
     "@nextui-org/shared-icons": "^2.0.9",
+    "@radix-ui/react-dialog": "^1.1.2",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-select": "^2.1.2",
     "axios": "^1.7.7",
     "cookies-next": "^4.3.0",
     "flowbite": "^2.5.2",
@@ -25,9 +31,12 @@
     "react-dom": "19.0.0-rc-69d4b800-20241021",
     "react-pagination": "^1.0.0",
     "react-responsive-pagination": "^2.9.0",
-    "swiper": "^11.1.14"
+    "swiper": "^11.1.14",
+    "swr": "^2.2.5"
   },
   "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
     "eslint": "^8",
     "eslint-config-next": "15.0.1",
     "postcss": "^8",
