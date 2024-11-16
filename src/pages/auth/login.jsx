@@ -124,7 +124,7 @@ const Login = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("email")}
                         onBlur={() => setFocusedInput("")}
-                        className="w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
+                        className="w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-black outline-none transition duration-200"
                         placeholder={
                           focusedInput === "email" ? "Enter your email" : ""
                         }
@@ -158,7 +158,7 @@ const Login = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("password")}
                         onBlur={() => setFocusedInput("")}
-                        className="w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
+                        className="w-full px-4 py-3.5 rounded-2xl border-2 text-black focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
                         placeholder={
                           focusedInput === "password"
                             ? "Enter your password"

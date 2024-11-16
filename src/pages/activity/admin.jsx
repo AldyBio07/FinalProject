@@ -308,7 +308,7 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
       )}
 
       {/* Activities Grid */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 text-black md:grid-cols-3">
         {paginatedActivities.map((activity) => (
           <div
             key={activity.id}
