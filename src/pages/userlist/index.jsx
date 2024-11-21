@@ -282,29 +282,56 @@ const UserList = ({ users }) => {
         </section>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <div className="inline-flex rounded-lg shadow">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 text-sm font-medium transition duration-200 ${
-                  currentPage === page
-                    ? "bg-[#0064D2] text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                } ${page === 1 ? "rounded-l-lg" : ""} ${
-                  page === totalPages ? "rounded-r-lg" : ""
-                } border border-gray-200`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="flex justify-center mt-6">
+        {totalPages > 1 && (
+          <>
+            {/* First Page Button */}
+            <button
+              onClick={() => handlePageChange(1)}
+              className={`px-3 py-1 mx-1 font-semibold text-white rounded ${
+                currentPage === 1 ? "bg-blue-500" : "bg-gray-500"
+              }`}
+            >
+              1
+            </button>
 
+            {/* Left Ellipsis */}
+            {currentPage > 4 && <span className="px-2">...</span>}
+
+            {/* Pages around the current page */}
+            {Array.from({ length: 5 }, (_, i) => {
+              const page = currentPage - 2 + i;
+              if (page > 1 && page < totalPages) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-1 mx-1 font-semibold text-white rounded ${
+                      currentPage === page ? "bg-blue-500" : "bg-gray-500"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              }
+              return null;
+            })}
+
+            {/* Right Ellipsis */}
+            {currentPage < totalPages - 3 && <span className="px-2">...</span>}
+
+            {/* Last Page Button */}
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              className={`px-3 py-1 mx-1 font-semibold text-white rounded ${
+                currentPage === totalPages ? "bg-blue-500" : "bg-gray-500"
+              }`}
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
+      </div>
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
