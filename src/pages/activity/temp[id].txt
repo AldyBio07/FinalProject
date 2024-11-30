@@ -128,7 +128,7 @@ const ActivityDetail = ({ activity, token }) => {
               </div>
             ))}
           </div>
-
+c
           {/* Content Grid */}
           <div className="grid gap-8 md:grid-cols-3">
             {/* Main Content */}
