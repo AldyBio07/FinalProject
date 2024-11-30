@@ -1,8 +1,22 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { uploadImage } from "@/helper/uploadImage";
-import { HiSearch, HiOutlineX, HiUpload, HiGift } from "react-icons/hi";
+import {
+  Pencil,
+  Trash2,
+  X,
+  Upload,
+  Plus,
+  Save,
+  PlusCircle,
+} from "lucide-react";
+import {
+  HiSearch,
+  HiOutlineX,
+  HiUpload,
+  HiClipboardList,
+} from "react-icons/hi";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 
@@ -45,7 +59,7 @@ export async function getServerSideProps({ req, res }) {
   }
 }
 
-const PromoManagement = ({ initialPromos = [], token }) => {
+const AdminPromo = ({ initialPromos = [], token }) => {
   const [promos, setPromos] = useState(initialPromos);
   const [selectedPromo, setSelectedPromo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,20 +75,26 @@ const PromoManagement = ({ initialPromos = [], token }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [filteredPromos, setFilteredPromos] = useState(promos);
   const itemsPerPage = 6;
 
-  const filteredPromos = promos.filter((promo) =>
-    promo.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const filtered = promos.filter((promo) =>
+      promo.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredPromos(filtered);
+    setCurrentPage(1);
+  }, [searchQuery, promos]);
 
-  const paginatedPromos = filteredPromos.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
 
-  const totalPages = Math.ceil(filteredPromos.length / itemsPerPage);
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
 
   const fetchPromos = async () => {
     try {
@@ -88,9 +108,7 @@ const PromoManagement = ({ initialPromos = [], token }) => {
           },
         }
       );
-      const promosData = response.data.data || [];
-      setPromos(promosData);
-      console.log("Fetched promos:", promosData); // Debug log
+      setPromos(response.data.data || []);
     } catch (error) {
       console.error("Error fetching promos:", error);
       showNotification("Failed to fetch promos", true);
@@ -98,6 +116,7 @@ const PromoManagement = ({ initialPromos = [], token }) => {
       setLoading(false);
     }
   };
+
   const createPromo = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -218,6 +237,15 @@ const PromoManagement = ({ initialPromos = [], token }) => {
     }
   };
 
+  // Pagination calculations
+  const indexOfLastPromo = currentPage * itemsPerPage;
+  const indexOfFirstPromo = indexOfLastPromo - itemsPerPage;
+  const currentPromos = filteredPromos.slice(
+    indexOfFirstPromo,
+    indexOfLastPromo
+  );
+  const totalPages = Math.ceil(filteredPromos.length / itemsPerPage);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Background Decorations */}
@@ -256,7 +284,7 @@ const PromoManagement = ({ initialPromos = [], token }) => {
           {/* Page Header & Search */}
           <div className="p-6 mb-8 bg-white shadow-sm rounded-2xl">
             <div className="max-w-4xl mx-auto">
-              <h1 className="mb-6 text-3xl font-extrabold text-blue-600">
+              <h1 className="mb-6 text-3xl font-extrabold text-[#101827]">
                 Promo Management
               </h1>
               <div className="flex items-center gap-4">
@@ -267,13 +295,13 @@ const PromoManagement = ({ initialPromos = [], token }) => {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
                     placeholder="Search promos..."
                     className="w-full py-3 pl-12 pr-10 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      onClick={clearSearch}
                       className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600"
                     >
                       <HiOutlineX className="w-5 h-5" />
@@ -286,9 +314,9 @@ const PromoManagement = ({ initialPromos = [], token }) => {
                     resetForm();
                     setIsModalOpen(true);
                   }}
-                  className="flex items-center px-6 py-3 space-x-2 text-white transition duration-200 bg-blue-600 rounded-xl hover:bg-blue-700"
+                  className="flex items-center px-6 py-3 space-x-2 text-white transition duration-200 bg-[#101827] rounded-xl hover:bg-blue-700"
                 >
-                  <HiGift className="w-5 h-5" />
+                  <HiClipboardList className="w-5 h-5" />
                   <span>Add Promo</span>
                 </button>
               </div>
@@ -296,7 +324,7 @@ const PromoManagement = ({ initialPromos = [], token }) => {
           </div>
 
           {/* Promos Grid */}
-          {paginatedPromos.length === 0 ? (
+          {currentPromos.length === 0 ? (
             <div className="p-8 text-center bg-white shadow-sm rounded-2xl">
               <p className="text-xl font-semibold text-gray-600">
                 No promos found
@@ -306,48 +334,52 @@ const PromoManagement = ({ initialPromos = [], token }) => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3">
-              {paginatedPromos.map((promo) => (
+            <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-3">
+              {currentPromos.map((promo) => (
                 <div
                   key={promo.id}
-                  className="overflow-hidden transition duration-300 bg-white shadow-sm rounded-2xl hover:shadow-lg hover:-translate-y-1"
+                  className="relative overflow-hidden transition-all duration-300 bg-[#101827] group rounded-2xl hover:bg-[#D9E2E8]"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  {/* Image Section */}
+                  <div className="relative overflow-hidden h-96">
                     <img
                       src={promo.imageUrl}
                       alt={promo.title}
-                      className="object-cover w-full h-full transition-transform duration-300 transform hover:scale-110"
+                      className="object-cover w-full h-full transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-gray-900">
-                        {promo.title}
-                      </h3>
-                      <span className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full">
+
+                  {/* Content Section */}
+                  <div className="p-5">
+                    {/* Promo Badge */}
+                    <div className="mb-3">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 rounded-full bg-blue-50">
                         {promo.promo_code}
                       </span>
                     </div>
-                    <p className="mb-4 text-gray-600 line-clamp-2">
+
+                    {/* Title */}
+                    <h3 className="mb-2 text-lg font-bold text-[#FF6910] line-clamp-1">
+                      {promo.title}
+                    </h3>
+
+                    {/* Price Section */}
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-2xl font-bold text-blue-600">
+                        ${promo.promo_discount_price}
+                      </span>
+                      <span className="text-sm text-gray-400">
+                        Min. ${promo.minimum_claim_price}
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <p className="mb-4 text-sm text-gray-500 line-clamp-2">
                       {promo.description}
                     </p>
-                    <div className="mb-4">
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm text-gray-500">Discount</span>
-                        <span className="font-medium text-blue-600">
-                          ${promo.promo_discount_price}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">
-                          Min. Claim
-                        </span>
-                        <span className="font-medium text-gray-900">
-                          ${promo.minimum_claim_price}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-3 border-t border-gray-100">
                       <button
                         onClick={() => {
                           setIsEditing(true);
@@ -363,14 +395,18 @@ const PromoManagement = ({ initialPromos = [], token }) => {
                           });
                           setIsModalOpen(true);
                         }}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                        title="Edit Promo"
                       >
+                        <Pencil className="w-4 h-4" />
                         Edit
                       </button>
                       <button
                         onClick={() => deletePromo(promo.id)}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-100"
+                        title="Delete Promo"
                       >
+                        <Trash2 className="w-4 h-4" />
                         Delete
                       </button>
                     </div>
@@ -423,201 +459,276 @@ const PromoManagement = ({ initialPromos = [], token }) => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-lg p-6 bg-white shadow-xl rounded-2xl">
-            <h2 className="mb-6 text-xl font-bold text-gray-900">
-              {isEditing ? "Edit Promo" : "Add New Promo"}
-            </h2>
-            <form onSubmit={isEditing ? updatePromo : createPromo}>
-              <div className="space-y-6">
-                {/* Promo Image */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Promo Image
-                  </label>
-                  {formData.imageUrl && (
-                    <div className="relative mb-4 overflow-hidden rounded-xl">
-                      <img
-                        src={formData.imageUrl}
-                        alt="Promo Preview"
-                        className="object-cover w-full h-48"
-                      />
-                    </div>
-                  )}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <div className="flex items-center justify-center px-6 py-4 text-sm text-gray-600 transition duration-200 border-2 border-gray-200 border-dashed rounded-xl hover:bg-gray-50">
-                      <HiUpload className="w-5 h-5 mr-2" />
-                      <span>Click or drag image to upload</span>
-                    </div>
-                  </div>
-                </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 transition-opacity bg-black/60 backdrop-blur-sm" />
 
-                {/* Title */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    required
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                {/* Terms and Conditions */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Terms and Conditions
-                  </label>
-                  <textarea
-                    name="terms_condition"
-                    value={formData.terms_condition}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        terms_condition: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Promo Code */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Promo Code
-                  </label>
-                  <input
-                    type="text"
-                    name="promo_code"
-                    value={formData.promo_code}
-                    onChange={(e) =>
-                      setFormData({ ...formData, promo_code: e.target.value })
-                    }
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    required
-                  />
-                </div>
-
-                {/* Price Inputs */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      Discount Price
-                    </label>
-                    <input
-                      type="number"
-                      name="promo_discount_price"
-                      value={formData.promo_discount_price}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          promo_discount_price: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      Minimum Claim Price
-                    </label>
-                    <input
-                      type="number"
-                      name="minimum_claim_price"
-                      value={formData.minimum_claim_price}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          minimum_claim_price: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex justify-end gap-4 mt-8">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2.5 text-sm font-medium text-gray-700 transition duration-200 bg-gray-100 rounded-xl hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`px-6 py-2.5 text-sm font-medium text-white transition duration-200 rounded-xl
-                    ${
-                      loading
-                        ? "bg-blue-400 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    }`}
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <svg
-                        className="w-5 h-5 text-white animate-spin"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      <span>{isEditing ? "Updating..." : "Creating..."}</span>
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="relative w-full max-w-2xl transition-all transform bg-white shadow-2xl rounded-2xl">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-6 h-6 text-blue-500" />
+                      <span>Edit Promo</span>
                     </div>
                   ) : (
-                    <span>{isEditing ? "Update Promo" : "Create Promo"}</span>
+                    <div className="flex items-center gap-2">
+                      <PlusCircle className="w-6 h-6 text-blue-500" />
+                      <span>Add New Promo</span>
+                    </div>
                   )}
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </form>
+
+              {/* Modal Body */}
+              <form onSubmit={isEditing ? updatePromo : createPromo}>
+                <div className="p-6 space-y-6">
+                  {/* Image Upload Section */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Promo Image
+                    </label>
+                    {formData.imageUrl && (
+                      <div className="relative overflow-hidden border-2 border-gray-100 rounded-lg aspect-video">
+                        <img
+                          src={formData.imageUrl}
+                          alt="Promo Preview"
+                          className="object-cover w-full h-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, imageUrl: "" })
+                          }
+                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="flex flex-col items-center justify-center px-6 py-8 text-center transition-colors border-2 border-gray-200 border-dashed rounded-lg hover:bg-gray-50">
+                        <div className="p-3 mb-2 text-blue-600 rounded-full bg-blue-50">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          Click to upload or drag and drop
+                        </span>
+                        <span className="mt-1 text-xs text-gray-500">
+                          SVG, PNG, JPG or GIF (max. 800x400px)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Enter promo title"
+                      required
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Description
+                    </label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg resize-none bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      rows={4}
+                      placeholder="Enter promo description"
+                      required
+                    />
+                  </div>
+
+                  {/* Terms and Conditions */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Terms and Conditions
+                    </label>
+                    <textarea
+                      name="terms_condition"
+                      value={formData.terms_condition}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          terms_condition: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg resize-none bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      rows={3}
+                      placeholder="Enter terms and conditions"
+                      required
+                    />
+                  </div>
+
+                  {/* Promo Code */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Promo Code
+                    </label>
+                    <input
+                      type="text"
+                      name="promo_code"
+                      value={formData.promo_code}
+                      onChange={(e) =>
+                        setFormData({ ...formData, promo_code: e.target.value })
+                      }
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Enter promo code"
+                      required
+                    />
+                  </div>
+
+                  {/* Price Inputs */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Discount Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute text-gray-500 -translate-y-1/2 left-4 top-1/2">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          name="promo_discount_price"
+                          value={formData.promo_discount_price}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              promo_discount_price: e.target.value,
+                            })
+                          }
+                          className="w-full py-3 pl-8 pr-4 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Minimum Claim Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute text-gray-500 -translate-y-1/2 left-4 top-1/2">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          name="minimum_claim_price"
+                          value={formData.minimum_claim_price}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              minimum_claim_price: e.target.value,
+                            })
+                          }
+                          className="w-full py-3 pl-8 pr-4 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`
+                      px-5 py-2.5 text-sm font-medium text-white rounded-lg
+                      transition-all focus:outline-none focus:ring-4 focus:ring-blue-100
+                      ${
+                        loading
+                          ? "bg-blue-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700"
+                      }
+                    `}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4 animate-spin"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <span>{isEditing ? "Updating..." : "Creating..."}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {isEditing ? (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Update Promo</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            <span>Create Promo</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -625,4 +736,4 @@ const PromoManagement = ({ initialPromos = [], token }) => {
   );
 };
 
-export default PromoManagement;
+export default AdminPromo;

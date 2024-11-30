@@ -3,10 +3,11 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { setCookie } from "cookies-next";
 import axios from "axios";
-import { Button } from "flowbite-react";
 import { HiMail, HiLockClosed, HiOutlineGlobeAlt } from "react-icons/hi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const Login = () => {
   const router = useRouter();

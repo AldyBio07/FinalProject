@@ -1,27 +1,33 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { uploadImage } from "@/helper/uploadImage";
-import { HiOutlineGlobeAlt } from "react-icons/hi";
+import {
+  Pencil,
+  Trash2,
+  X,
+  Upload,
+  Plus,
+  Save,
+  PlusCircle,
+} from "lucide-react";
+import {
+  HiSearch,
+  HiOutlineX,
+  HiUpload,
+  HiClipboardList,
+} from "react-icons/hi";
 
-export async function getServerSideProps({ req, res }) {
-  const token = getCookie("token", { req, res });
-  if (!token) {
-    return {
-      redirect: {
-        destination: "/auth/login",
-        permanent: false,
-      },
-    };
-  }
+import Navbar from "@/components/Navbar";
 
+export async function getServerSideProps() {
   try {
     const promosResponse = await axios.get(
       "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/promos",
       {
         headers: {
           apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -29,7 +35,6 @@ export async function getServerSideProps({ req, res }) {
     return {
       props: {
         initialPromos: promosResponse.data.data || [],
-        token,
       },
     };
   } catch (error) {
@@ -43,7 +48,8 @@ export async function getServerSideProps({ req, res }) {
   }
 }
 
-const PromoManagement = ({ initialPromos = [], token }) => {
+const Promo = ({ initialPromos = [] }) => {
+  const router = useRouter();
   const [promos, setPromos] = useState(initialPromos);
   const [selectedPromo, setSelectedPromo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,15 +62,37 @@ const PromoManagement = ({ initialPromos = [], token }) => {
     promo_discount_price: "",
     minimum_claim_price: "",
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const [notification, setNotification] = useState(null);
+
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [filteredPromos, setFilteredPromos] = useState(promos);
   const itemsPerPage = 6;
 
-  // Fetch promos
+  useEffect(() => {
+    const filtered = promos.filter((promo) =>
+      promo.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredPromos(filtered);
+    setCurrentPage(1);
+  }, [searchQuery, promos]);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
+  const handlePromoClick = (promoId) => {
+    console.log("Promo clicked:", promoId);
+    router.push(`/promo/${promoId}`);
+  };
+
   const fetchPromos = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(
         "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/promos",
         {
@@ -77,114 +105,11 @@ const PromoManagement = ({ initialPromos = [], token }) => {
       setPromos(response.data.data || []);
     } catch (error) {
       console.error("Error fetching promos:", error);
-      showNotification("Failed to fetch promos", true);
-    }
-  };
-
-  // Create Promo
-  const createPromo = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const payload = {
-        ...formData,
-        promo_discount_price: Number(formData.promo_discount_price),
-        minimum_claim_price: Number(formData.minimum_claim_price),
-      };
-
-      await axios.post(
-        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-promo",
-        payload,
-        {
-          headers: {
-            apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      resetForm();
-      setIsModalOpen(false);
-      fetchPromos();
-      showNotification("Promo created successfully!");
-    } catch (error) {
-      console.error("Error creating promo:", error);
-      showNotification(
-        error.response?.data?.message || "Failed to create promo",
-        true
-      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Update Promo
-  const updatePromo = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const payload = {
-        ...formData,
-        promo_discount_price: Number(formData.promo_discount_price),
-        minimum_claim_price: Number(formData.minimum_claim_price),
-      };
-
-      await axios.post(
-        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-promo/${selectedPromo.id}`,
-        payload,
-        {
-          headers: {
-            apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      resetForm();
-      setIsModalOpen(false);
-      fetchPromos();
-      showNotification("Promo updated successfully!");
-    } catch (error) {
-      console.error("Error updating promo:", error);
-      showNotification(
-        error.response?.data?.message || "Failed to update promo",
-        true
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Delete Promo
-  const deletePromo = async (promoId) => {
-    if (!window.confirm("Are you sure you want to delete this promo?")) return;
-
-    setLoading(true);
-    try {
-      await axios.delete(
-        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/delete-promo/${promoId}`,
-        {
-          headers: {
-            apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      fetchPromos();
-      showNotification("Promo deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting promo:", error);
-      showNotification(
-        error.response?.data?.message || "Failed to delete promo",
-        true
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reset form
   const resetForm = () => {
     setFormData({
       title: "",
@@ -198,316 +123,160 @@ const PromoManagement = ({ initialPromos = [], token }) => {
     setSelectedPromo(null);
   };
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Show notification
-  const showNotification = (message, isError = false) => {
-    setNotification({
-      message,
-      type: isError ? "error" : "success",
-    });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  // Handle file upload
-  const handleFileChange = async (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
-
-    try {
-      const uploadedImageUrl = await uploadImage(selectedFile);
-      setFormData((prev) => ({
-        ...prev,
-        imageUrl: uploadedImageUrl,
-      }));
-    } catch (error) {
-      console.error("Failed to upload image:", error);
-      showNotification("Failed to upload image", true);
-    }
-  };
-
-  // Modal controls
-  const openCreateModal = () => {
-    setIsEditing(false);
-    resetForm();
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (promo) => {
-    setIsEditing(true);
-    setSelectedPromo(promo);
-    setFormData({
-      title: promo.title,
-      description: promo.description,
-      imageUrl: promo.imageUrl,
-      terms_condition: promo.terms_condition,
-      promo_code: promo.promo_code,
-      promo_discount_price: promo.promo_discount_price,
-      minimum_claim_price: promo.minimum_claim_price,
-    });
-    setIsModalOpen(true);
-  };
-
-  // Pagination
-  const paginatedPromos = promos.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  // Pagination calculations
+  const indexOfLastPromo = currentPage * itemsPerPage;
+  const indexOfFirstPromo = indexOfLastPromo - itemsPerPage;
+  const currentPromos = filteredPromos.slice(
+    indexOfFirstPromo,
+    indexOfLastPromo
   );
+  const totalPages = Math.ceil(filteredPromos.length / itemsPerPage);
 
   return (
-    <div className="min-h-screen font-sans bg-[#F5F7FF]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1">
-              <span className="text-[#0064D2] text-3xl font-black">travel</span>
-              <span className="text-[#FF6B6B] text-3xl font-black">
-                .journey
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      {/* Background Decorations */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 transform -translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-br from-blue-100/20 to-transparent blur-3xl translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 transform translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent blur-3xl -translate-x-1/4" />
+      </div>
+
+      <Navbar />
+
+      {/* Main Content Area */}
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 mt-16 mb-6">
+        {/* Promos Grid */}
+        {currentPromos.length === 0 ? (
+          <div className="p-8 text-center bg-white shadow-sm rounded-2xl">
+            <p className="text-xl font-semibold text-gray-600">
+              No promos found
+            </p>
+            <p className="mt-2 text-gray-500">
+              Try adjusting your search criteria
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-3">
+            {currentPromos.map((promo) => (
+              <div
+                key={promo.id}
+                onClick={() => handlePromoClick(promo.id)}
+                className="relative overflow-hidden transition-all duration-300 bg-[#101827] group rounded-2xl hover:bg-[#D9E2E8] cursor-pointer transform hover:-translate-y-1 hover:shadow-xl"
+              >
+                {/* Image Section */}
+                <div className="relative overflow-hidden h-96">
+                  <img
+                    src={promo.imageUrl}
+                    alt={promo.title}
+                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+
+                {/* Content Section */}
+                <div className="p-5">
+                  {/* Promo Badge */}
+                  <div className="mb-3">
+                    <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 rounded-full bg-blue-50">
+                      {promo.promo_code}
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="mb-2 text-lg font-bold text-[#FF6910] line-clamp-1">
+                    {promo.title}
+                  </h3>
+
+                  {/* Price Section */}
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <span className="text-2xl font-bold text-blue-600">
+                      ${promo.promo_discount_price}
+                    </span>
+                    <span className="text-sm text-gray-400">
+                      Min. ${promo.minimum_claim_price}
+                    </span>
+                  </div>
+
+                  {/* Description */}
+                  <p className="mb-4 text-sm text-gray-500 line-clamp-2">
+                    {promo.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="sticky flex justify-center bottom-6">
+            <div className="inline-flex bg-white divide-x divide-gray-200 shadow-sm rounded-xl">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 rounded-l-xl disabled:opacity-50"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50">
+                Page {currentPage} of {totalPages}
               </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="flex items-center px-4 py-2 space-x-2 text-gray-600 transition duration-200 rounded-full hover:bg-gray-50">
-                <HiOutlineGlobeAlt className="w-5 h-5" />
-                <span className="text-sm">English</span>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 rounded-r-xl disabled:opacity-50"
+              >
+                Last
               </button>
             </div>
           </div>
-        </div>
-      </header>
-
-      {/* Notification */}
-      {notification && (
-        <div
-          className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${
-            notification.type === "success"
-              ? "bg-green-500 text-white"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          {notification.message}
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="container px-6 py-8 mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Promo Management</h1>
-          <button
-            onClick={openCreateModal}
-            className="px-6 py-3 text-white transition duration-200 bg-blue-600 rounded-full hover:bg-blue-700 active:transform active:scale-[0.99] shadow-lg shadow-blue-200"
-          >
-            + Add New Promo
-          </button>
-        </div>
-
-        {/* Promos Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {paginatedPromos.map((promo) => (
-            <div
-              key={promo.id}
-              className="overflow-hidden bg-white rounded-2xl shadow-lg transform transition duration-300 hover:scale-[1.02]"
-            >
-              <img
-                src={promo.imageUrl}
-                alt={promo.title}
-                className="object-cover w-full h-48"
-              />
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {promo.title}
-                  </h3>
-                  <span className="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full">
-                    {promo.promo_code}
-                  </span>
-                </div>
-                <p className="mb-4 text-gray-600 line-clamp-2">
-                  {promo.description}
-                </p>
-                <div className="mb-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-gray-500">Discount</span>
-                    <span className="font-medium text-blue-600">
-                      ${promo.promo_discount_price}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Min. Claim</span>
-                    <span className="font-medium text-gray-900">
-                      ${promo.minimum_claim_price}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => openEditModal(promo)}
-                    className="flex-1 py-2 text-blue-600 transition bg-blue-100 rounded-lg hover:bg-blue-200"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deletePromo(promo.id)}
-                    className="flex-1 py-2 text-red-600 transition bg-red-100 rounded-lg hover:bg-red-200"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-center mt-8 space-x-2">
-          {Array.from(
-            { length: Math.ceil(promos.length / itemsPerPage) },
-            (_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-4 py-2 rounded-full transition duration-200 ${
-                  currentPage === i + 1
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {i + 1}
-              </button>
-            )
-          )}
-        </div>
-      </div>
+        )}
+      </main>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-2xl p-6 bg-white rounded-2xl">
-            <h2 className="mb-6 text-2xl font-bold text-gray-900">
-              {isEditing ? "Edit Promo" : "Create New Promo"}
-            </h2>
-            <form
-              onSubmit={isEditing ? updatePromo : createPromo}
-              className="space-y-6"
-            >
-              {/* Title */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  required
-                />
-              </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 transition-opacity bg-black/60 backdrop-blur-sm" />
 
-              {/* Description */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  rows="4"
-                  required
-                />
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="relative w-full max-w-2xl transition-all transform bg-white shadow-2xl rounded-2xl">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-6 h-6 text-blue-500" />
+                      <span>Edit Promo</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <PlusCircle className="w-6 h-6 text-blue-500" />
+                      <span>Add New Promo</span>
+                    </div>
+                  )}
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Image
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="w-full border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  required
-                />
-              </div>
-
-              {/* Terms and Conditions */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Terms and Conditions
-                </label>
-                <textarea
-                  name="terms_condition"
-                  value={formData.terms_condition}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  rows="3"
-                />
-              </div>
-
-              {/* Promo Code */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Promo Code
-                </label>
-                <input
-                  type="text"
-                  name="promo_code"
-                  value={formData.promo_code}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  required
-                />
-              </div>
-
-              {/* Discount Price */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Discount Price
-                </label>
-                <input
-                  type="number"
-                  name="promo_discount_price"
-                  value={formData.promo_discount_price}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  required
-                />
-              </div>
-
-              {/* Minimum Claim Price */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Minimum Claim Price
-                </label>
-                <input
-                  type="number"
-                  name="minimum_claim_price"
-                  value={formData.minimum_claim_price}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  required
-                />
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:transform active:scale-[0.98] transition duration-200"
-              >
-                {isEditing ? "Update Promo" : "Create Promo"}
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -515,4 +284,4 @@ const PromoManagement = ({ initialPromos = [], token }) => {
   );
 };
 
-export default PromoManagement;
+export default Promo;

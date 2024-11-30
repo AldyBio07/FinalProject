@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Check, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import axios from "axios";
 import { getCookie } from "cookies-next";
+import Navbar from "@/components/Navbar";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -159,7 +160,7 @@ const Cart = () => {
       );
 
       if (response.data.code === "200") {
-        router.push("/transaction/user/create");
+        router.push("/transaction/my-transaction");
       } else {
         console.error("Error creating transaction:", response.data.message);
       }
@@ -201,6 +202,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen text-black bg-gray-50">
+      <Navbar />
       <div className="sticky top-0 z-10 bg-white shadow-sm">
         <div className="container px-4 py-4 mx-auto">
           <div className="flex items-center justify-between">

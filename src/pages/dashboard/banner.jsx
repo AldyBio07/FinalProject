@@ -1,8 +1,22 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { uploadImage } from "@/helper/uploadImage";
-import { HiSearch, HiOutlineX, HiUpload, HiPhotograph } from "react-icons/hi";
+import {
+  Pencil,
+  Trash2,
+  X,
+  Upload,
+  Plus,
+  Save,
+  PlusCircle,
+} from "lucide-react";
+import {
+  HiSearch,
+  HiOutlineX,
+  HiUpload,
+  HiClipboardList,
+} from "react-icons/hi";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 
@@ -45,7 +59,7 @@ export async function getServerSideProps({ req, res }) {
   }
 }
 
-const ListBanner = ({ initialBanners = [], token }) => {
+const AdminBanner = ({ initialBanners = [], token }) => {
   const [banners, setBanners] = useState(initialBanners);
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,9 +70,26 @@ const ListBanner = ({ initialBanners = [], token }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [filteredBanners, setFilteredBanners] = useState(banners);
   const itemsPerPage = 6;
+
+  useEffect(() => {
+    const filtered = banners.filter((banner) =>
+      banner.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredBanners(filtered);
+    setCurrentPage(1);
+  }, [searchQuery, banners]);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
 
   const fetchBanners = async () => {
     try {
@@ -80,17 +111,6 @@ const ListBanner = ({ initialBanners = [], token }) => {
       setLoading(false);
     }
   };
-
-  const filteredBanners = banners.filter((banner) =>
-    banner.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const paginatedBanners = filteredBanners.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalPages = Math.ceil(filteredBanners.length / itemsPerPage);
 
   const createBanner = async (e) => {
     e.preventDefault();
@@ -144,7 +164,6 @@ const ListBanner = ({ initialBanners = [], token }) => {
 
   const deleteBanner = async (bannerId) => {
     if (!confirm("Are you sure you want to delete this banner?")) return;
-
     setLoading(true);
     try {
       await axios.delete(
@@ -166,16 +185,11 @@ const ListBanner = ({ initialBanners = [], token }) => {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", imageUrl: "" });
+    setFormData({
+      name: "",
+      imageUrl: "",
+    });
     setSelectedBanner(null);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   const showNotification = (message, isError = false) => {
@@ -201,14 +215,21 @@ const ListBanner = ({ initialBanners = [], token }) => {
     }
   };
 
+  // Pagination calculations
+  const indexOfLastBanner = currentPage * itemsPerPage;
+  const indexOfFirstBanner = indexOfLastBanner - itemsPerPage;
+  const currentBanners = filteredBanners.slice(
+    indexOfFirstBanner,
+    indexOfLastBanner
+  );
+  const totalPages = Math.ceil(filteredBanners.length / itemsPerPage);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Background Decorations */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-100/20 to-transparent rounded-full blur-3xl transform -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl transform translate-y-1/2 -translate-x-1/4" />
-        <div className="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-50/10 via-white/5 to-blue-50/10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDBNIDAgMjAgTCA0MCAyMCBNIDIwIDAgTCAyMCA0MCBNIDAgMzAgTCA0MCAzMCBNIDMwIDAgTCAzMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjA0N2ZmMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30" />
+        <div className="absolute top-0 right-0 transform -translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-br from-blue-100/20 to-transparent blur-3xl translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 transform translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent blur-3xl -translate-x-1/4" />
       </div>
 
       {/* Sidebar */}
@@ -241,7 +262,7 @@ const ListBanner = ({ initialBanners = [], token }) => {
           {/* Page Header & Search */}
           <div className="p-6 mb-8 bg-white shadow-sm rounded-2xl">
             <div className="max-w-4xl mx-auto">
-              <h1 className="text-3xl font-extrabold text-[#0064D2] mb-6">
+              <h1 className="mb-6 text-3xl font-extrabold text-[#101827]">
                 Banner Management
               </h1>
               <div className="flex items-center gap-4">
@@ -252,13 +273,13 @@ const ListBanner = ({ initialBanners = [], token }) => {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
                     placeholder="Search banners..."
                     className="w-full py-3 pl-12 pr-10 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      onClick={clearSearch}
                       className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600"
                     >
                       <HiOutlineX className="w-5 h-5" />
@@ -271,9 +292,9 @@ const ListBanner = ({ initialBanners = [], token }) => {
                     resetForm();
                     setIsModalOpen(true);
                   }}
-                  className="px-6 py-3 text-white transition duration-200 bg-[#0064D2] rounded-xl hover:bg-blue-700 flex items-center space-x-2"
+                  className="flex items-center px-6 py-3 space-x-2 text-white transition duration-200 bg-[#101827] rounded-xl hover:bg-blue-700"
                 >
-                  <HiPhotograph className="w-5 h-5" />
+                  <HiClipboardList className="w-5 h-5" />
                   <span>Add Banner</span>
                 </button>
               </div>
@@ -281,7 +302,7 @@ const ListBanner = ({ initialBanners = [], token }) => {
           </div>
 
           {/* Banners Grid */}
-          {paginatedBanners.length === 0 ? (
+          {currentBanners.length === 0 ? (
             <div className="p-8 text-center bg-white shadow-sm rounded-2xl">
               <p className="text-xl font-semibold text-gray-600">
                 No banners found
@@ -291,24 +312,30 @@ const ListBanner = ({ initialBanners = [], token }) => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3">
-              {paginatedBanners.map((banner) => (
+            <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-3">
+              {currentBanners.map((banner) => (
                 <div
                   key={banner.id}
-                  className="overflow-hidden transition duration-300 bg-white shadow-sm rounded-2xl hover:shadow-lg hover:-translate-y-1"
+                  className="relative overflow-hidden transition-all duration-300 bg-[#101827] group rounded-2xl hover:bg-[#D9E2E8]"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  {/* Image Section */}
+                  <div className="relative overflow-hidden h-96">
                     <img
                       src={banner.imageUrl}
                       alt={banner.name}
-                      className="object-cover w-full h-full transition-transform duration-300 transform hover:scale-110"
+                      className="object-cover w-full h-full transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-6">
-                    <h3 className="mb-4 text-lg font-bold text-gray-900">
+
+                  {/* Content Section */}
+                  <div className="p-5">
+                    {/* Title */}
+                    <h3 className="mb-4 text-lg font-bold text-[#FF6910] line-clamp-1">
                       {banner.name}
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-3 border-t border-gray-100">
                       <button
                         onClick={() => {
                           setIsEditing(true);
@@ -319,14 +346,18 @@ const ListBanner = ({ initialBanners = [], token }) => {
                           });
                           setIsModalOpen(true);
                         }}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                        title="Edit Banner"
                       >
+                        <Pencil className="w-4 h-4" />
                         Edit
                       </button>
                       <button
                         onClick={() => deleteBanner(banner.id)}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-100"
+                        title="Delete Banner"
                       >
+                        <Trash2 className="w-4 h-4" />
                         Delete
                       </button>
                     </div>
@@ -379,103 +410,164 @@ const ListBanner = ({ initialBanners = [], token }) => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-lg p-6 bg-white shadow-xl rounded-2xl">
-            <h2 className="mb-6 text-xl font-bold text-gray-900">
-              {isEditing ? "Edit Banner" : "Add New Banner"}
-            </h2>
-            <form onSubmit={isEditing ? updateBanner : createBanner}>
-              <div className="space-y-6">
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Banner Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    required
-                  />
-                </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 transition-opacity bg-black/60 backdrop-blur-sm" />
 
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Banner Image
-                  </label>
-                  {formData.imageUrl && (
-                    <div className="relative mb-4 overflow-hidden rounded-xl">
-                      <img
-                        src={formData.imageUrl}
-                        alt="Banner Preview"
-                        className="object-cover w-full h-48"
-                      />
-                    </div>
-                  )}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <div className="flex items-center justify-center px-6 py-4 text-sm text-gray-600 transition duration-200 border-2 border-gray-200 border-dashed rounded-xl hover:bg-gray-50">
-                      <HiUpload className="w-5 h-5 mr-2" />
-                      <span>Click or drag image to upload</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-4 mt-8">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2.5 text-sm font-medium text-gray-700 transition duration-200 bg-gray-100 rounded-xl hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`px-6 py-2.5 text-sm font-medium text-white transition duration-200 rounded-xl
-                    ${
-                      loading
-                        ? "bg-blue-400 cursor-not-allowed"
-                        : "bg-[#0064D2] hover:bg-blue-700"
-                    }`}
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <svg
-                        className="w-5 h-5 text-white animate-spin"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      <span>{isEditing ? "Updating..." : "Creating..."}</span>
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="relative w-full max-w-2xl transition-all transform bg-white shadow-2xl rounded-2xl">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-6 h-6 text-blue-500" />
+                      <span>Edit Banner</span>
                     </div>
                   ) : (
-                    <span>{isEditing ? "Update Banner" : "Create Banner"}</span>
+                    <div className="flex items-center gap-2">
+                      <PlusCircle className="w-6 h-6 text-blue-500" />
+                      <span>Add New Banner</span>
+                    </div>
                   )}
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </form>
+
+              {/* Modal Body */}
+              <form onSubmit={isEditing ? updateBanner : createBanner}>
+                <div className="p-6 space-y-6">
+                  {/* Image Upload Section */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Banner Image
+                    </label>
+                    {formData.imageUrl && (
+                      <div className="relative overflow-hidden border-2 border-gray-100 rounded-lg aspect-video">
+                        <img
+                          src={formData.imageUrl}
+                          alt="Banner Preview"
+                          className="object-cover w-full h-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, imageUrl: "" })
+                          }
+                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="flex flex-col items-center justify-center px-6 py-8 text-center transition-colors border-2 border-gray-200 border-dashed rounded-lg hover:bg-gray-50">
+                        <div className="p-3 mb-2 text-blue-600 rounded-full bg-blue-50">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          Click to upload or drag and drop
+                        </span>
+                        <span className="mt-1 text-xs text-gray-500">
+                          SVG, PNG, JPG or GIF (max. 800x400px)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Banner Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Banner Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Enter banner name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`
+                      px-5 py-2.5 text-sm font-medium text-white rounded-lg
+                      transition-all focus:outline-none focus:ring-4 focus:ring-blue-100
+                      ${
+                        loading
+                          ? "bg-blue-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700"
+                      }
+                    `}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4 animate-spin"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <span>{isEditing ? "Updating..." : "Creating..."}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {isEditing ? (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Update Banner</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            <span>Create Banner</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -483,4 +575,4 @@ const ListBanner = ({ initialBanners = [], token }) => {
   );
 };
 
-export default ListBanner;
+export default AdminBanner;

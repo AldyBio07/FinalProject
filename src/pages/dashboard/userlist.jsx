@@ -1,16 +1,23 @@
-import Link from "next/link";
-import { getCookie, deleteCookie } from "cookies-next";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import { useState, useRef, useEffect } from "react";
+import { getCookie, deleteCookie } from "cookies-next";
 import { uploadImage } from "@/helper/uploadImage";
-import { HiSearch, HiOutlineX } from "react-icons/hi";
+import {
+  Pencil,
+  Trash2,
+  X,
+  Upload,
+  Plus,
+  Save,
+  PlusCircle,
+} from "lucide-react";
+import { HiSearch, HiOutlineX, HiClipboardList } from "react-icons/hi";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 
 export async function getServerSideProps({ req, res }) {
   const token = getCookie("token", { req, res });
-
   if (!token) {
     return {
       redirect: {
@@ -47,7 +54,7 @@ export async function getServerSideProps({ req, res }) {
   }
 }
 
-const UserList = ({ users }) => {
+const AdminUser = ({ users }) => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
@@ -55,25 +62,23 @@ const UserList = ({ users }) => {
   const [updatedRole, setUpdatedRole] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState(users);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const itemsPerPage = 6;
   const [updatedInfo, setUpdatedInfo] = useState({
     name: "",
     email: "",
     profilePictureUrl: "",
     phoneNumber: "",
   });
-  const [file, setFile] = useState(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
-
-  // Effect to filter users when search query changes
   useEffect(() => {
     const filtered = users.filter((user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredUsers(filtered);
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1);
   }, [searchQuery, users]);
 
   const handleSearchChange = (e) => {
@@ -85,28 +90,18 @@ const UserList = ({ users }) => {
   };
 
   const handleFileChange = async (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-
-    if (!selectedFile) {
-      return;
-    }
+    const file = e.target.files[0];
+    if (!file) return;
 
     try {
-      const uploadedImageUrl = await uploadImage(selectedFile);
+      const imageUrl = await uploadImage(file);
       setUpdatedInfo((prev) => ({
         ...prev,
-        profilePictureUrl: uploadedImageUrl,
+        profilePictureUrl: imageUrl,
       }));
     } catch (error) {
-      console.error("Failed to upload image:", error);
-      alert(`Failed to upload image: ${error.message}`);
+      showNotification("Failed to upload image", true);
     }
-  };
-
-  const handleLogout = () => {
-    deleteCookie("token");
-    router.push("/auth/login");
   };
 
   const openModal = (type, user) => {
@@ -130,16 +125,16 @@ const UserList = ({ users }) => {
     setUpdatedRole("");
   };
 
-  const handleRoleChange = (e) => {
-    setUpdatedRole(e.target.value);
-  };
-
-  const handleInfoChange = (e) => {
-    const { name, value } = e.target;
-    setUpdatedInfo((prev) => ({ ...prev, [name]: value }));
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      message,
+      type: isError ? "error" : "success",
+    });
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const handleUpdateUser = async () => {
+    setLoading(true);
     try {
       await axios.post(
         `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-user-role/${selectedUser.id}`,
@@ -151,28 +146,22 @@ const UserList = ({ users }) => {
           },
         }
       );
+      showNotification("User role updated successfully");
       router.replace(router.asPath);
       closeModal();
     } catch (error) {
-      console.error(
-        "Error updating user role:",
-        error.response?.data || error.message
-      );
+      showNotification("Failed to update user role", true);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateUserInfo = async () => {
+    setLoading(true);
     try {
-      let profilePictureUrl = updatedInfo.profilePictureUrl;
-
-      const updateData = {
-        ...updatedInfo,
-        profilePictureUrl: profilePictureUrl,
-      };
-
       await axios.post(
         `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-profile`,
-        updateData,
+        updatedInfo,
         {
           headers: {
             apiKey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
@@ -180,39 +169,31 @@ const UserList = ({ users }) => {
           },
         }
       );
-
+      showNotification("User information updated successfully");
       router.replace(router.asPath);
       closeModal();
     } catch (error) {
-      console.error("Error updating user information:", error);
-      alert(`Failed to update profile: ${error.message}`);
+      showNotification("Failed to update user information", true);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Calculate current users for pagination
+  // Pagination calculations
   const indexOfLastUser = currentPage * itemsPerPage;
   const indexOfFirstUser = indexOfLastUser - itemsPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Background Decorations */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* Top-right decoration */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-100/20 to-transparent rounded-full blur-3xl transform -translate-y-1/2 translate-x-1/4" />
-        {/* Bottom-left decoration */}
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl transform translate-y-1/2 -translate-x-1/4" />
-        {/* Center decoration */}
-        <div className="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-50/10 via-white/5 to-blue-50/10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDBNIDAgMjAgTCA0MCAyMCBNIDIwIDAgTCAyMCA0MCBNIDAgMzAgTCA0MCAzMCBNIDMwIDAgTCAzMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjA0N2ZmMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30" />
+        <div className="absolute top-0 right-0 transform -translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-br from-blue-100/20 to-transparent blur-3xl translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 transform translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent blur-3xl -translate-x-1/4" />
       </div>
-      {/* Sidebar - Fixed */}
+
+      {/* Sidebar */}
       <div className="fixed left-0 z-30 w-64 h-full">
         <Sidebar role="admin" />
       </div>
@@ -224,12 +205,25 @@ const UserList = ({ users }) => {
           <Navbar role="admin" />
         </div>
 
+        {/* Notification */}
+        {notification && (
+          <div
+            className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-2xl shadow-lg ${
+              notification.type === "success"
+                ? "bg-green-500 text-white"
+                : "bg-red-500 text-white"
+            } transition-all duration-300 transform`}
+          >
+            {notification.message}
+          </div>
+        )}
+
         {/* Main Content */}
         <main className="flex-1 p-6 mt-16 mb-6">
           {/* Page Header & Search */}
           <div className="p-6 mb-8 bg-white shadow-sm rounded-2xl">
             <div className="max-w-4xl mx-auto">
-              <h1 className="text-3xl font-extrabold text-[#0064D2] mb-6">
+              <h1 className="mb-6 text-3xl font-extrabold text-[#101827]">
                 User Management
               </h1>
               <div className="flex items-center gap-4">
@@ -241,7 +235,7 @@ const UserList = ({ users }) => {
                     type="text"
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    placeholder="Search by username..."
+                    placeholder="Search users..."
                     className="w-full py-3 pl-12 pr-10 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                   {searchQuery && (
@@ -272,36 +266,48 @@ const UserList = ({ users }) => {
               {currentUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="overflow-hidden transition duration-300 bg-white shadow-sm rounded-2xl hover:shadow-lg hover:-translate-y-1"
+                  className="relative overflow-hidden transition-all duration-300 bg-[#101827] group rounded-2xl hover:bg-[#D9E2E8]"
                 >
-                  <div className="aspect-w-16 aspect-h-12">
+                  {/* Image Section */}
+                  <div className="relative h-96 woverflow-hidden">
                     <img
                       src={user.profilePictureUrl}
                       alt={user.name}
-                      className="object-cover w-full h-full"
+                      className="object-cover w-full h-full transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-6">
-                    <h3 className="mb-1 text-lg font-bold text-gray-900">
-                      {user.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                    <div className="inline-flex px-3 py-1 mt-2 rounded-full bg-blue-50">
-                      <span className="text-sm font-medium text-[#0064D2]">
+
+                  {/* Content Section */}
+                  <div className="p-5">
+                    {/* Role Badge */}
+                    <div className="mb-3">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 rounded-full bg-blue-50">
                         {user.role}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 mt-6">
-                      <button
+
+                    {/* Title & Info */}
+                    <h3 className="mb-2 text-lg font-bold text-[#FF6910] line-clamp-1">
+                      {user.name}
+                    </h3>
+                    <p className="mb-4 text-sm text-gray-500 line-clamp-2">
+                      {user.email}
+                    </p>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-3 border-t border-gray-100">
+                      {/* <button
                         onClick={() => openModal("edit-info", user)}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
                       >
+                        <Pencil className="w-4 h-4" />
                         Edit Info
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => openModal("edit", user)}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-[#0064D2] rounded-xl hover:bg-blue-700 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium text-blue-600 transition-colors duration-200 rounded-lg bg-blue-50 hover:bg-blue-100"
                       >
+                        <Pencil className="w-4 h-4" />
                         Edit Role
                       </button>
                     </div>
@@ -316,14 +322,14 @@ const UserList = ({ users }) => {
             <div className="sticky flex justify-center bottom-6">
               <div className="inline-flex bg-white divide-x divide-gray-200 shadow-sm rounded-xl">
                 <button
-                  onClick={() => handlePageChange(1)}
+                  onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
                   className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 rounded-l-xl disabled:opacity-50"
                 >
                   First
                 </button>
                 <button
-                  onClick={() => handlePageChange(currentPage - 1)}
+                  onClick={() => setCurrentPage(currentPage - 1)}
                   disabled={currentPage === 1}
                   className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 disabled:opacity-50"
                 >
@@ -333,14 +339,14 @@ const UserList = ({ users }) => {
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
-                  onClick={() => handlePageChange(currentPage + 1)}
+                  onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 disabled:opacity-50"
                 >
                   Next
                 </button>
                 <button
-                  onClick={() => handlePageChange(totalPages)}
+                  onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-50 rounded-r-xl disabled:opacity-50"
                 >
@@ -354,116 +360,237 @@ const UserList = ({ users }) => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl">
-            <div className="p-6">
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 transition-opacity bg-black/60 backdrop-blur-sm" />
+
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="relative w-full max-w-2xl transition-all transform bg-white shadow-2xl rounded-2xl">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {modalType === "edit" ? (
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-6 h-6 text-blue-500" />
+                      <span>Edit User Role</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-6 h-6text-blue-500" />
+                      <span>Edit User Info</span>
+                    </div>
+                  )}
+                </h2>
+                <button
+                  onClick={closeModal}
+                  className="p-2 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
               {modalType === "edit" ? (
-                <>
-                  <h2 className="mb-6 text-xl font-bold text-gray-900">
-                    Edit User Role
-                  </h2>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Name
-                      </label>
-                      <p className="mt-1 text-gray-600">{selectedUser?.name}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <p className="mt-1 text-gray-600">
-                        {selectedUser?.email}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block mb-2 text-sm font-medium text-gray-700">
-                        Role
-                      </label>
-                      <select
-                        value={updatedRole}
-                        onChange={handleRoleChange}
-                        className="w-full p-3 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
+                <div className="p-6 space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Name
+                    </label>
+                    <p className="px-4 py-3 text-gray-900 bg-gray-50 rounded-xl">
+                      {selectedUser?.name}
+                    </p>
                   </div>
-                  <div className="flex justify-end gap-4 mt-8">
-                    <button
-                      onClick={closeModal}
-                      className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition duration-200"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleUpdateUser}
-                      className="px-6 py-2.5 text-sm font-medium text-white bg-[#0064D2] rounded-xl hover:bg-blue-700 transition duration-200"
-                    >
-                      Update Role
-                    </button>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Email
+                    </label>
+                    <p className="px-4 py-3 text-gray-900 bg-gray-50 rounded-xl">
+                      {selectedUser?.email}
+                    </p>
                   </div>
-                </>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Role
+                    </label>
+                    <select
+                      value={updatedRole}
+                      onChange={(e) => setUpdatedRole(e.target.value)}
+                      className="w-full px-4 py-3 transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <h2 className="mb-6 text-xl font-bold text-gray-900">
-                    Edit User Information
-                  </h2>
-                  <div className="space-y-6">
-                    {/* Profile Image Section */}
-                    <div className="text-center">
-                      <div className="relative w-32 h-32 mx-auto mb-4">
+                <div className="p-6 space-y-6">
+                  {/* Image Upload Section */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Profile Picture
+                    </label>
+                    {updatedInfo.profilePictureUrl && (
+                      <div className="relative overflow-hidden border-2 border-gray-100 rounded-lg aspect-video">
                         <img
                           src={updatedInfo.profilePictureUrl}
-                          alt="Profile"
-                          className="object-cover w-full h-full rounded-full ring-4 ring-blue-100"
+                          alt="Profile Preview"
+                          className="object-cover w-full h-full"
                         />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setUpdatedInfo((prev) => ({
+                              ...prev,
+                              profilePictureUrl: "",
+                            }))
+                          }
+                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
+                    )}
+                    <div className="relative">
                       <input
                         type="file"
                         onChange={handleFileChange}
                         accept="image/*"
-                        className="w-full p-2 text-sm text-gray-600 border-2 border-gray-200 bg-gray-50 rounded-xl"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="flex flex-col items-center justify-center px-6 py-8 text-center transition-colors border-2 border-gray-200 border-dashed rounded-lg hover:bg-gray-50">
+                        <div className="p-3 mb-2 text-blue-600 rounded-full bg-blue-50">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          Click to upload or drag and drop
+                        </span>
+                        <span className="mt-1 text-xs text-gray-500">
+                          SVG, PNG, JPG or GIF (max. 800x400px)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Info Fields */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={updatedInfo.name}
+                        onChange={(e) =>
+                          setUpdatedInfo((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-3 transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                       />
                     </div>
 
-                    {/* Form Fields */}
-                    {Object.keys(updatedInfo)
-                      .filter((key) => key !== "profilePictureUrl")
-                      .map((key) => (
-                        <div key={key}>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            {key.charAt(0).toUpperCase() + key.slice(1)}
-                          </label>
-                          <input
-                            type="text"
-                            name={key}
-                            value={updatedInfo[key]}
-                            onChange={handleInfoChange}
-                            className="w-full p-3 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                          />
-                        </div>
-                      ))}
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={updatedInfo.email}
+                        onChange={(e) =>
+                          setUpdatedInfo((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-3 transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      />
+                    </div>
 
-                  <div className="flex justify-end gap-4 mt-8">
-                    <button
-                      onClick={closeModal}
-                      className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition duration-200"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleUpdateUserInfo}
-                      className="px-6 py-2.5 text-sm font-medium text-white bg-[#0064D2] rounded-xl hover:bg-blue-700 transition duration-200"
-                    >
-                      Update Info
-                    </button>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phoneNumber"
+                        value={updatedInfo.phoneNumber}
+                        onChange={(e) =>
+                          setUpdatedInfo((prev) => ({
+                            ...prev,
+                            phoneNumber: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-3 transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      />
+                    </div>
                   </div>
-                </>
+                </div>
               )}
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={
+                    modalType === "edit"
+                      ? handleUpdateUser
+                      : handleUpdateUserInfo
+                  }
+                  disabled={loading}
+                  className={`
+                    px-5 py-2.5 text-sm font-medium text-white rounded-lg
+                    transition-all focus:outline-none focus:ring-4 focus:ring-blue-100
+                    ${
+                      loading
+                        ? "bg-blue-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }
+                  `}
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      <span>
+                        {modalType === "edit"
+                          ? "Updating Role..."
+                          : "Updating Info..."}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Save className="w-4 h-4" />
+                      <span>
+                        {modalType === "edit" ? "Update Role" : "Update Info"}
+                      </span>
+                    </div>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -472,4 +599,4 @@ const UserList = ({ users }) => {
   );
 };
 
-export default UserList;
+export default AdminUser;

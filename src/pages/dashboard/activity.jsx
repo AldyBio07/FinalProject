@@ -3,6 +3,15 @@ import axios from "axios";
 import { getCookie } from "cookies-next";
 import { uploadImage } from "@/helper/uploadImage";
 import {
+  Pencil,
+  Trash2,
+  X,
+  Upload,
+  Plus,
+  Save,
+  PlusCircle,
+} from "lucide-react";
+import {
   HiSearch,
   HiOutlineX,
   HiUpload,
@@ -253,7 +262,7 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
       <div className="flex flex-col flex-1 ml-64">
         {/* Fixed Navbar */}
         <div className="fixed top-0 right-0 z-20 bg-white shadow-sm left-64">
-          <Navbar role="admin" />
+          <Navbar />
         </div>
 
         {/* Notification */}
@@ -272,9 +281,9 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
         {/* Main Content */}
         <main className="flex-1 p-6 mt-16 mb-6">
           {/* Page Header & Search */}
-          <div className="p-6 mb-8 bg-white shadow-sm rounded-2xl">
+          <div className="p-6 mb-8 bg-white shadow-xl rounded-2xl">
             <div className="max-w-4xl mx-auto">
-              <h1 className="mb-6 text-3xl font-extrabold text-blue-600">
+              <h1 className="mb-6 text-3xl font-extrabold text-[#101827]">
                 Activity Management
               </h1>
               <div className="flex items-center gap-4">
@@ -287,7 +296,7 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
                     value={searchQuery}
                     onChange={handleSearchChange}
                     placeholder="Search activities..."
-                    className="w-full py-3 pl-12 pr-10 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full py-3 pl-12 pr-10 text-[#101827] transition duration-200 border-2 border-gray-200 bg-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                   {searchQuery && (
                     <button
@@ -304,7 +313,7 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
                     resetForm();
                     setIsModalOpen(true);
                   }}
-                  className="flex items-center px-6 py-3 space-x-2 text-white transition duration-200 bg-blue-600 rounded-xl hover:bg-blue-700"
+                  className="flex items-center px-6 py-3 space-x-2 text-white transition duration-200 bg-[#101827] rounded-xl hover:bg-blue-700"
                 >
                   <HiClipboardList className="w-5 h-5" />
                   <span>Add Activity</span>
@@ -328,33 +337,70 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
               {currentActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className="overflow-hidden transition duration-300 bg-white shadow-sm rounded-2xl hover:shadow-lg hover:-translate-y-1"
+                  className="relative overflow-hidden transition-all duration-300 bg-[#101827] hover:bg-[#D9E2E8] group rounded-2xl hover:shadow-lg"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  {/* Image Section */}
+                  <div className="relative overflow-hidden h-96">
                     <img
                       src={activity.imageUrls[0]}
                       alt={activity.title}
-                      className="object-cover w-full h-full transition-transform duration-300 transform hover:scale-110"
+                      className="object-cover w-full h-full transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      {activity.title}
-                    </h3>
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-sm text-gray-500 line-through">
-                        ${activity.price}
-                      </span>
-                      <span className="text-lg font-bold text-blue-600">
-                        ${activity.price_discount}
-                      </span>
-                    </div>
-                    <div className="inline-flex px-3 py-1 mb-4 rounded-full bg-blue-50">
-                      <span className="text-sm font-medium text-blue-600">
+
+                  {/* Content Section */}
+                  <div className="p-5">
+                    {/* Category Badge */}
+                    <div className="mb-3">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 rounded-full bg-blue-50">
                         {activity.category?.name}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 mt-4">
+
+                    {/* Title */}
+                    <h3 className="mb-2 text-lg font-bold text-[#FF6910] line-clamp-1">
+                      {activity.title}
+                    </h3>
+
+                    {/* Price Section */}
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-2xl font-bold text-blue-600">
+                        {new Intl.NumberFormat("id-ID", {
+                          style: "currency",
+                          currency: "IDR",
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(activity.price_discount)}
+                      </span>
+                      <span className="text-sm text-gray-400 line-through">
+                        {new Intl.NumberFormat("id-ID", {
+                          style: "currency",
+                          currency: "IDR",
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(activity.price)}
+                      </span>
+                      <div>
+                        {activity.price_discount < activity.price && (
+                          <span className="text-xs font-medium text-emerald-500">
+                            {Math.round(
+                              ((activity.price - activity.price_discount) /
+                                activity.price) *
+                                100
+                            )}
+                            % OFF
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="mb-4 text-sm text-gray-500 line-clamp-2">
+                      {activity.description}
+                    </p>
+
+                    {/* Action Buttons - Fixed Position */}
+                    <div className="flex gap-2 pt-3 border-t border-gray-100">
                       <button
                         onClick={() => {
                           setIsEditing(true);
@@ -369,14 +415,18 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
                           });
                           setIsModalOpen(true);
                         }}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-green-500 rounded-xl hover:bg-green-600 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                        title="Edit Activity"
                       >
+                        <Pencil className="w-4 h-4" />
                         Edit
                       </button>
                       <button
                         onClick={() => deleteActivity(activity.id)}
-                        className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition duration-200"
+                        className="flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-100"
+                        title="Delete Activity"
                       >
+                        <Trash2 className="w-4 h-4" />
                         Delete
                       </button>
                     </div>
@@ -429,186 +479,259 @@ const AdminActivity = ({ initialActivities = [], categories = [], token }) => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-lg p-6 bg-white shadow-xl rounded-2xl">
-            <h2 className="mb-6 text-xl font-bold text-gray-900">
-              {isEditing ? "Edit Activity" : "Add New Activity"}
-            </h2>
-            <form onSubmit={isEditing ? updateActivity : createActivity}>
-              <div className="space-y-6">
-                {/* Image Upload Section */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Activity Image
-                  </label>
-                  {formData.imageUrls[0] && (
-                    <div className="relative mb-4 overflow-hidden rounded-xl">
-                      <img
-                        src={formData.imageUrls[0]}
-                        alt="Activity Preview"
-                        className="object-cover w-full h-48"
-                      />
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 transition-opacity bg-black/60 backdrop-blur-sm" />
+
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="relative w-full max-w-2xl transition-all transform bg-white shadow-2xl rounded-2xl">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-6 h-6 text-blue-500" />
+                      <span>Edit Activity</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <PlusCircle className="w-6 h-6 text-blue-500" />
+                      <span>Add New Activity</span>
                     </div>
                   )}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <div className="flex items-center justify-center px-6 py-4 text-sm text-gray-600 transition duration-200 border-2 border-gray-200 border-dashed rounded-xl hover:bg-gray-50">
-                      <HiUpload className="w-5 h-5 mr-2" />
-                      <span>Click or drag image to upload</span>
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <form onSubmit={isEditing ? updateActivity : createActivity}>
+                <div className="p-6 space-y-6">
+                  {/* Image Upload Section */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Activity Image
+                    </label>
+                    {formData.imageUrls[0] && (
+                      <div className="relative overflow-hidden border-2 border-gray-100 rounded-lg aspect-video">
+                        <img
+                          src={formData.imageUrls[0]}
+                          alt="Activity Preview"
+                          className="object-cover w-full h-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, imageUrls: [""] })
+                          }
+                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="flex flex-col items-center justify-center px-6 py-8 text-center transition-colors border-2 border-gray-200 border-dashed rounded-lg hover:bg-gray-50">
+                        <div className="p-3 mb-2 text-blue-600 rounded-full bg-blue-50">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          Click to upload or drag and drop
+                        </span>
+                        <span className="mt-1 text-xs text-gray-500">
+                          SVG, PNG, JPG or GIF (max. 800x400px)
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Activity Title */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    required
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                {/* Price and Discount */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      Price
+                  {/* Activity Title */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Title
                     </label>
                     <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
+                      type="text"
+                      name="title"
+                      value={formData.title}
                       onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
+                        setFormData({ ...formData, title: e.target.value })
                       }
-                      className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Enter activity title"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      Discounted Price
+
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Description
                     </label>
-                    <input
-                      type="number"
-                      name="price_discount"
-                      value={formData.price_discount}
+                    <textarea
+                      name="description"
+                      value={formData.description}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          price_discount: e.target.value,
+                          description: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg resize-none bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      rows={4}
+                      placeholder="Enter activity description"
+                      required
                     />
+                  </div>
+
+                  {/* Price and Discount */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-black ">
+                        Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute text-black -translate-y-1/2 left-4 top-1/2">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          name="price"
+                          value={formData.price}
+                          onChange={(e) =>
+                            setFormData({ ...formData, price: e.target.value })
+                          }
+                          className="py-3 pl-8 pr-4 text-black transition-all border-2 border-gray-200 rounded-lg text-blackw-full bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Discounted Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute text-gray-500 -translate-y-1/2 left-4 top-1/2">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          name="price_discount"
+                          value={formData.price_discount}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              price_discount: e.target.value,
+                            })
+                          }
+                          className="w-full py-3 pl-8 pr-4 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Category Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Category
+                    </label>
+                    <select
+                      name="category_id"
+                      value={formData.category_id}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          category_id: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      required
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                {/* Category Selection */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Category
-                  </label>
-                  <select
-                    name="category_id"
-                    value={formData.category_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category_id: e.target.value })
-                    }
-                    className="w-full px-4 py-3 text-gray-900 transition duration-200 border-2 border-gray-200 bg-gray-50 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    required
+                {/* Modal Footer */}
+                <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200"
                   >
-                    <option value="">Select Category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`
+                px-5 py-2.5 text-sm font-medium text-white rounded-lg
+                transition-all focus:outline-none focus:ring-4 focus:ring-blue-100
+                ${
+                  loading
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }
+              `}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4 animate-spin"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <span>{isEditing ? "Updating..." : "Creating..."}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {isEditing ? (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Update Activity</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            <span>Create Activity</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </button>
                 </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex justify-end gap-4 mt-8">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2.5 text-sm font-medium text-gray-700 transition duration-200 bg-gray-100 rounded-xl hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`px-6 py-2.5 text-sm font-medium text-white transition duration-200 rounded-xl
-                    ${
-                      loading
-                        ? "bg-blue-400 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    }`}
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <svg
-                        className="w-5 h-5 text-white animate-spin"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      <span>{isEditing ? "Updating..." : "Creating..."}</span>
-                    </div>
-                  ) : (
-                    <span>
-                      {isEditing ? "Update Activity" : "Create Activity"}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
       )}

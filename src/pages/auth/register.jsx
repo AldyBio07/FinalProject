@@ -3,17 +3,30 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { setCookie } from "cookies-next";
 import axios from "axios";
-import { HiMail, HiLockClosed, HiOutlineGlobeAlt } from "react-icons/hi";
+import {
+  HiMail,
+  HiLockClosed,
+  HiOutlineGlobeAlt,
+  HiPhone,
+  HiUser,
+} from "react-icons/hi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import { Upload, X } from "lucide-react";
+import { uploadImage } from "@/helper/uploadImage";
 
 const Register = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
+    phoneNumber: "",
     password: "",
+    passwordRepeat: "",
+    role: "",
+    profilePictureUrl: "",
   });
   const [focusedInput, setFocusedInput] = useState("");
 
@@ -25,8 +38,53 @@ const Register = () => {
     }));
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const imageUrl = await uploadImage(file);
+      setFormData((prev) => ({
+        ...prev,
+        profilePictureUrl: imageUrl,
+      }));
+    } catch (error) {
+      setError("Failed to upload image");
+    }
+  };
+
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError("Name is required");
+      return false;
+    }
+    if (!formData.email.trim()) {
+      setError("Email is required");
+      return false;
+    }
+    if (!formData.phoneNumber.trim()) {
+      setError("Phone number is required");
+      return false;
+    }
+    if (!formData.password) {
+      setError("Password is required");
+      return false;
+    }
+    if (formData.password !== formData.passwordRepeat) {
+      setError("Passwords do not match");
+      return false;
+    }
+    if (!formData.profilePictureUrl) {
+      setError("Profile picture is required");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
     setError("");
 
@@ -42,7 +100,6 @@ const Register = () => {
       );
 
       setCookie("token", response.data.token);
-      // Redirect to login page after successful registration
       setTimeout(() => {
         router.push("/auth/login");
       }, 2000);
@@ -61,14 +118,12 @@ const Register = () => {
       <header className="sticky top-0 z-50 bg-white shadow-sm">
         <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center space-x-1">
               <span className="text-[#0064D2] text-3xl font-black">travel</span>
               <span className="text-[#FF6B6B] text-3xl font-black">
                 .journey
               </span>
             </div>
-            {/* Language Selector */}
             <div className="flex items-center space-x-4">
               <button className="flex items-center px-4 py-2 space-x-2 text-gray-600 transition duration-200 rounded-full hover:bg-gray-50">
                 <HiOutlineGlobeAlt className="w-5 h-5" />
@@ -82,7 +137,6 @@ const Register = () => {
       {/* Main Content */}
       <main className="px-4 py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="flex flex-col items-start gap-12 lg:flex-row">
-          {/* Left Side - Register Form */}
           <div className="w-full lg:w-1/2">
             <div className="p-8 bg-white shadow-lg rounded-3xl sm:p-12">
               <div className="max-w-md mx-auto">
@@ -106,6 +160,39 @@ const Register = () => {
                   )}
 
                   <div className="space-y-5">
+                    {/* Name Input */}
+                    <div className="relative">
+                      <label
+                        htmlFor="name"
+                        className={`absolute left-3 ${
+                          focusedInput === "name" || formData.name
+                            ? "-top-2.5 text-sm bg-white px-2 text-blue-600"
+                            : "top-3.5 text-gray-400"
+                        } transition-all duration-200`}
+                      >
+                        Full Name
+                      </label>
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("name")}
+                        onBlur={() => setFocusedInput("")}
+                        className="text-black w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
+                      />
+                      <HiUser
+                        className={`absolute right-4 top-4 w-5 h-5 ${
+                          focusedInput === "name"
+                            ? "text-blue-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Email Input */}
                     <div className="relative">
                       <label
                         htmlFor="email"
@@ -126,10 +213,7 @@ const Register = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("email")}
                         onBlur={() => setFocusedInput("")}
-                        className="w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
-                        placeholder={
-                          focusedInput === "email" ? "Enter your email" : ""
-                        }
+                        className="text-black w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
                       />
                       <HiMail
                         className={`absolute right-4 top-4 w-5 h-5 ${
@@ -140,6 +224,107 @@ const Register = () => {
                       />
                     </div>
 
+                    {/* Phone Number Input */}
+                    <div className="relative">
+                      <label
+                        htmlFor="phoneNumber"
+                        className={`absolute left-3 ${
+                          focusedInput === "phoneNumber" || formData.phoneNumber
+                            ? "-top-2.5 text-sm bg-white px-2 text-blue-600"
+                            : "top-3.5 text-gray-400"
+                        } transition-all duration-200`}
+                      >
+                        Phone Number
+                      </label>
+                      <input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        type="tel"
+                        required
+                        value={formData.phoneNumber}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("phoneNumber")}
+                        onBlur={() => setFocusedInput("")}
+                        className="text-black w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
+                      />
+                      <HiPhone
+                        className={`absolute right-4 top-4 w-5 h-5 ${
+                          focusedInput === "phoneNumber"
+                            ? "text-blue-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Role Selection */}
+                    <div className="relative">
+                      <label
+                        htmlFor="role"
+                        className="absolute -top-2.5 left-3 text-sm bg-white px-2 text-blue-600"
+                      >
+                        Role
+                      </label>
+                      <select
+                        id="role"
+                        name="role"
+                        value={formData.role}
+                        onChange={handleChange}
+                        className="text-black w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
+                      >
+                        <option value="">Select a role</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+
+                    {/* Profile Picture Upload */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-blue-600">
+                        Profile Picture
+                      </label>
+                      {formData.profilePictureUrl && (
+                        <div className="relative overflow-hidden border-2 border-gray-100 rounded-lg aspect-video">
+                          <img
+                            src={formData.profilePictureUrl}
+                            alt="Profile Preview"
+                            className="object-cover w-full h-full"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                profilePictureUrl: "",
+                              }))
+                            }
+                            className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-600 hover:text-gray-800 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="relative">
+                        <input
+                          type="file"
+                          onChange={handleFileChange}
+                          accept="image/*"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="flex flex-col items-center justify-center px-6 py-8 text-center transition-colors border-2 border-gray-200 border-dashed rounded-lg hover:bg-gray-50">
+                          <div className="p-3 mb-2 text-blue-600 rounded-full bg-blue-50">
+                            <Upload className="w-6 h-6" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">
+                            Click to upload or drag and drop
+                          </span>
+                          <span className="mt-1 text-xs text-gray-500">
+                            SVG, PNG, JPG or GIF (max. 800x400px)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Password Input */}
                     <div className="relative">
                       <label
                         htmlFor="password"
@@ -160,16 +345,44 @@ const Register = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("password")}
                         onBlur={() => setFocusedInput("")}
-                        className="w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
-                        placeholder={
-                          focusedInput === "password"
-                            ? "Enter your password"
-                            : ""
-                        }
+                        className="text-black w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
                       />
                       <HiLockClosed
                         className={`absolute right-4 top-4 w-5 h-5 ${
                           focusedInput === "password"
+                            ? "text-blue-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Repeat Password Input */}
+                    <div className="relative">
+                      <label
+                        htmlFor="passwordRepeat"
+                        className={`absolute left-3 ${
+                          focusedInput === "passwordRepeat" ||
+                          formData.passwordRepeat
+                            ? "-top-2.5 text-sm bg-white px-2 text-blue-600"
+                            : "top-3.5 text-gray-400"
+                        } transition-all duration-200`}
+                      >
+                        Repeat Password
+                      </label>
+                      <input
+                        id="passwordRepeat"
+                        name="passwordRepeat"
+                        type="password"
+                        required
+                        value={formData.passwordRepeat}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("passwordRepeat")}
+                        onBlur={() => setFocusedInput("")}
+                        className="text-black w-full px-4 py-3.5 rounded-2xl border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition duration-200"
+                      />
+                      <HiLockClosed
+                        className={`absolute right-4 top-4 w-5 h-5 ${
+                          focusedInput === "passwordRepeat"
                             ? "text-blue-500"
                             : "text-gray-400"
                         }`}
@@ -331,10 +544,6 @@ const Register = () => {
                         Access exclusive deals and save up to 40% on premium
                         bookings
                       </p>
-                      <div className="flex items-center mt-3 text-sm text-blue-600">
-                        <span className="font-medium">Learn More</span>
-                        <span className="ml-1">→</span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -356,13 +565,8 @@ const Register = () => {
                         </span>
                       </div>
                       <p className="mt-2 text-gray-600">
-                        Join a community of travelers and explore the world
-                        together.
+                        Connect with travelers worldwide and share experiences
                       </p>
-                      <div className="flex items-center mt-3 text-sm text-blue-600">
-                        <span className="font-medium">Learn More</span>
-                        <span className="ml-1">→</span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -377,20 +581,16 @@ const Register = () => {
                     <div className="ml-6">
                       <div className="flex items-center space-x-2">
                         <h3 className="text-lg font-bold text-gray-900">
-                          Professional Support
+                          24/7 Support
                         </h3>
                         <span className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full">
-                          Anytime
+                          Premium
                         </span>
                       </div>
                       <p className="mt-2 text-gray-600">
-                        Get 24/7 support for all your travel needs and
-                        inquiries.
+                        Get instant support from our travel experts anytime,
+                        anywhere
                       </p>
-                      <div className="flex items-center mt-3 text-sm text-blue-600">
-                        <span className="font-medium">Learn More</span>
-                        <span className="ml-1">→</span>
-                      </div>
                     </div>
                   </div>
                 </div>

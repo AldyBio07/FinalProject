@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { getCookie } from "cookies-next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { NotificationContainer, Notification } from "@/components/Notification";
 
 export async function getServerSideProps({ req, res }) {
   const token = getCookie("token", { req, res });
@@ -50,9 +51,9 @@ const ActivityList = ({ activities = [], token }) => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cart, setCart] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [notification, setNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -124,31 +125,45 @@ const ActivityList = ({ activities = [], token }) => {
     }
   };
 
-  // Add to cart handler
-  const handleAddToCart = (activity) => {
-    setCart((prevCart) => {
-      const itemInCart = prevCart.find((item) => item.id === activity.id);
-      if (itemInCart) {
-        return prevCart.map((item) =>
-          item.id === activity.id
-            ? { ...itemInCart, quantity: itemInCart.quantity + 1 }
-            : item
-        );
-      }
-      return [...prevCart, { ...activity, quantity: 1 }];
-    });
+  // Function to add notification
+  const addNotification = (message, type = "success") => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type }]);
 
-    // Save to API
-    saveToCartAPI(activity.id);
-
-    // Show notification for a few seconds
-    setNotification(`Added ${activity.title} to the cart!`);
+    // Auto remove after 5 seconds
     setTimeout(() => {
-      setNotification(null);
-    }, 3000);
+      removeNotification(id);
+    }, 5000);
   };
 
-  // Open/Close Modal
+  // Function to remove notification
+  const removeNotification = (id) => {
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
+    );
+  };
+
+  // Updated handleAddToCart function
+  const handleAddToCart = async (activity) => {
+    try {
+      await saveToCartAPI(activity.id);
+      setCart((prevCart) => {
+        const itemInCart = prevCart.find((item) => item.id === activity.id);
+        if (itemInCart) {
+          return prevCart.map((item) =>
+            item.id === activity.id
+              ? { ...itemInCart, quantity: itemInCart.quantity + 1 }
+              : item
+          );
+        }
+        return [...prevCart, { ...activity, quantity: 1 }];
+      });
+
+      addNotification(`Added ${activity.title} to the cart!`);
+    } catch (error) {
+      addNotification("Failed to add item to cart", "error");
+    }
+  };
 
   // Paginated activities
   const paginatedActivities = filteredActivities.slice(
@@ -166,88 +181,165 @@ const ActivityList = ({ activities = [], token }) => {
     );
   };
   return (
-    <div className="min-h-screen p-6 text-gray-900 bg-gray-100">
-      <Layout userRole="user">
-        <h1 className="mb-4 text-3xl font-extrabold text-center text-blue-600">
-          Activity List
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      {/* Background Decorations */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 transform -translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-br from-blue-100/20 to-transparent blur-3xl translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 transform translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent blur-3xl -translate-x-1/4" />
+      </div>
 
-        {/* Category Filter Dropdown */}
-        <div className="mb-6">
-          <label htmlFor="categoryFilter" className="mr-2 font-medium">
-            Filter by Category:
-          </label>
-          <select
-            id="categoryFilter"
-            value={selectedCategory}
-            onChange={handleCategoryChange}
-            className="p-2 text-gray-700 bg-white border rounded-lg"
-          >
-            {categories.map((category, index) => (
-              <option key={index} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
+      <Layout userRole="user">
+        {/* Page Header & Search */}
+        <div className="p-6 mb-8 bg-white shadow-xl rounded-2xl">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="mb-6 text-3xl font-extrabold text-[#101827]">
+              Activities
+            </h1>
+            <div className="flex items-center gap-4">
+              {/* Category Filter Dropdown */}
+              <select
+                id="categoryFilter"
+                value={selectedCategory}
+                onChange={handleCategoryChange}
+                className="w-full py-3 pl-4 pr-10 text-[#101827] transition duration-200 border-2 border-gray-200 bg-gray-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                {categories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* Notification */}
-        {notification && (
-          <div className="fixed top-0 right-0 p-3 m-4 text-white bg-green-500 rounded-lg shadow-lg">
-            {notification}
+        {/* Notifications */}
+        <NotificationContainer>
+          {notifications.map(({ id, message, type }) => (
+            <Notification
+              key={id}
+              id={id}
+              message={message}
+              type={type}
+              onClose={removeNotification}
+            />
+          ))}
+        </NotificationContainer>
+
+        {/* Activity Cards */}
+        {paginatedActivities.length === 0 ? (
+          <div className="p-8 text-center bg-white shadow-sm rounded-2xl">
+            <p className="text-xl font-semibold text-gray-600">
+              No activities found
+            </p>
+            <p className="mt-2 text-gray-500">
+              Try selecting a different category
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedActivities.map((activity) => (
+              <div
+                key={activity.id}
+                className="relative overflow-hidden transition-all duration-300 bg-[#101827] hover:bg-[#D9E2E8] group rounded-2xl hover:shadow-lg"
+              >
+                {/* Image Section */}
+                <div className="relative overflow-hidden h-96">
+                  <img
+                    src={activity.imageUrls[0]}
+                    alt={activity.title}
+                    className="object-cover w-full h-full transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Content Section */}
+                <div className="p-5">
+                  {/* Category Badge */}
+                  <div className="mb-3">
+                    <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 rounded-full bg-blue-50">
+                      {activity.category?.name}
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="mb-2 text-lg font-bold text-[#FF6910] line-clamp-1">
+                    {activity.title}
+                  </h3>
+
+                  {/* Price Section */}
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <span className="text-2xl font-bold text-blue-600">
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(activity.price_discount)}
+                    </span>
+                    <span className="text-sm text-gray-400 line-through">
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(activity.price)}
+                    </span>
+                    {activity.price_discount < activity.price && (
+                      <span className="text-xs font-medium text-emerald-500">
+                        {Math.round(
+                          ((activity.price - activity.price_discount) /
+                            activity.price) *
+                            100
+                        )}
+                        % OFF
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  <p className="mb-4 text-sm text-gray-500 line-clamp-2">
+                    {activity.description}
+                  </p>
+
+                  {/* Action Button */}
+                  <div className="pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleAddToCart(activity)}
+                      className="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 bg-blue-600 rounded-lg hover:bg-blue-700"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Activity Cards */}
-        <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-          {paginatedActivities.map((activity) => (
-            <div
-              key={activity.id}
-              className="overflow-hidden transition duration-300 transform bg-white rounded-lg shadow-lg hover:scale-105 hover:shadow-xl"
-            >
-              <img
-                src={activity.imageUrls[0]}
-                alt={activity.title}
-                className="object-cover w-full h-48 rounded-t-lg"
-              />
-              <div className="p-4">
-                <h3 className="text-lg font-bold text-gray-800">
-                  {activity.title}
-                </h3>
-                <h3 className="text-sm text-gray-600">
-                  {activity.price_discount}
-                </h3>
-                <p className="text-sm text-gray-600">{activity.price}</p>
-                <p className="mt-2 text-sm text-gray-600">
-                  {typeof activity.description === "string"
-                    ? activity.description
-                    : JSON.stringify(activity.description)}
-                </p>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="sticky flex justify-center my-10 bottom-6">
+            <div className="inline-flex bg-white divide-x divide-gray-200 shadow-sm rounded-xl">
+              {Array.from({ length: totalPages }, (_, index) => (
                 <button
-                  onClick={() => handleAddToCart(activity)}
-                  className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+                  key={index + 1}
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={`px-4 py-2 text-sm font-medium transition duration-200 
+                    ${
+                      currentPage === index + 1
+                        ? "bg-blue-50 text-blue-600"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }
+                    ${index === 0 ? "rounded-l-xl" : ""}
+                    ${index === totalPages - 1 ? "rounded-r-xl" : ""}
+                  `}
                 >
-                  Add to Cart
+                  {index + 1}
                 </button>
-              </div>
+              ))}
             </div>
-          ))}
-        </section>
-
-        {/* Pagination Controls */}
-        <div className="flex justify-center mt-6">
-          {Array.from({ length: totalPages }, (_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className={`px-3 py-1 mx-1 font-semibold text-white rounded ${
-                currentPage === index + 1 ? "bg-blue-500" : "bg-gray-500"
-              }`}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
+          </div>
+        )}
       </Layout>
     </div>
   );
