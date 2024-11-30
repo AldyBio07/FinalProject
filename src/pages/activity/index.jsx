@@ -5,6 +5,7 @@ import { getCookie } from "cookies-next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { NotificationContainer, Notification } from "@/components/Notification";
+import Router from "next/router";
 
 export async function getServerSideProps({ req, res }) {
   const token = getCookie("token", { req, res });
@@ -54,6 +55,7 @@ const ActivityList = ({ activities = [], token }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const router = useRouter();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,6 +127,10 @@ const ActivityList = ({ activities = [], token }) => {
     }
   };
 
+  const handleActivityClick = (activityId) => {
+    router.push(`/activity/${activityId}`);
+  };
+
   // Function to add notification
   const addNotification = (message, type = "success") => {
     const id = Date.now();
@@ -182,6 +188,7 @@ const ActivityList = ({ activities = [], token }) => {
   };
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <Navbar />
       {/* Background Decorations */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 transform -translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-br from-blue-100/20 to-transparent blur-3xl translate-x-1/4" />
@@ -241,6 +248,7 @@ const ActivityList = ({ activities = [], token }) => {
             {paginatedActivities.map((activity) => (
               <div
                 key={activity.id}
+                onClick={() => handleActivityClick(activity.id)}
                 className="relative overflow-hidden transition-all duration-300 bg-[#101827] hover:bg-[#D9E2E8] group rounded-2xl hover:shadow-lg"
               >
                 {/* Image Section */}
@@ -297,7 +305,7 @@ const ActivityList = ({ activities = [], token }) => {
                   </div>
 
                   {/* Description */}
-                  <p className="mb-4 text-sm text-gray-500 line-clamp-2">
+                  <p className="mb-4 text-sm text-black line-clamp-2">
                     {activity.description}
                   </p>
 
@@ -341,6 +349,7 @@ const ActivityList = ({ activities = [], token }) => {
           </div>
         )}
       </Layout>
+      <Footer />
     </div>
   );
 };

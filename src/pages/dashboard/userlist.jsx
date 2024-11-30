@@ -416,7 +416,7 @@ const AdminUser = ({ users }) => {
                     <select
                       value={updatedRole}
                       onChange={(e) => setUpdatedRole(e.target.value)}
-                      className="w-full px-4 py-3 transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      className="w-full px-4 py-3 text-black transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>

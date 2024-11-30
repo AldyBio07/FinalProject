@@ -5,7 +5,6 @@ import { getCookie } from "cookies-next";
 import { uploadImage } from "@/helper/uploadImage";
 import { Pencil, X, Upload, Save } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 
 const Profile = () => {
   const router = useRouter();
@@ -117,11 +116,6 @@ const Profile = () => {
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 transform -translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-br from-blue-100/20 to-transparent blur-3xl translate-x-1/4" />
         <div className="absolute bottom-0 left-0 transform translate-y-1/2 rounded-full w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent blur-3xl -translate-x-1/4" />
-      </div>
-
-      {/* Sidebar */}
-      <div className="fixed left-0 z-30 w-64 h-full">
-        <Sidebar role={userInfo?.role} />
       </div>
 
       {/* Main Content Area */}

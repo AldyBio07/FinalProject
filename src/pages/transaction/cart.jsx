@@ -4,6 +4,7 @@ import { Check, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -201,7 +202,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen text-black bg-gray-50">
+    <div className="min-h-screen text-black bg-gray-50 md:pt-16">
       <Navbar />
       <div className="sticky top-0 z-10 bg-white shadow-sm">
         <div className="container px-4 py-4 mx-auto">
@@ -249,7 +250,7 @@ const Cart = () => {
                           type="checkbox"
                           checked={selectedItems.size === cartItems.length}
                           onChange={toggleAllItems}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                         />
                         <span className="text-sm font-medium">Select All</span>
                       </label>
@@ -264,7 +265,7 @@ const Cart = () => {
                           type="checkbox"
                           checked={selectedItems.has(item.id)}
                           onChange={() => toggleItemSelection(item.id)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                         />
                         <img
                           src={item.activity.imageUrls[0]}
@@ -378,6 +379,7 @@ const Cart = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
