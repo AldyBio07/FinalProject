@@ -275,7 +275,7 @@ const Cart = () => {
                         <div className="flex-grow">
                           <h3 className="font-medium">{item.activity.title}</h3>
                           <p className="mt-1 text-sm">
-                            Rp {item.activity.price_discount.toLocaleString()}
+                            Rp {item.activity.price_discount}
                           </p>
                           <div className="flex items-center gap-2 mt-2">
                             <button
@@ -304,10 +304,7 @@ const Cart = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">
-                            Rp{" "}
-                            {(
-                              item.activity.price_discount * item.quantity
-                            ).toLocaleString()}
+                            Rp {item.activity.price_discount * item.quantity}
                           </p>
                           <button
                             onClick={() => removeFromCart(item.id)}
@@ -336,7 +333,7 @@ const Cart = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Price:</span>
                     <span className="text-lg font-semibold">
-                      Rp {totalPrice.toLocaleString()}
+                      Rp {totalPrice}
                     </span>
                   </div>
                   <div className="flex flex-col gap-2">

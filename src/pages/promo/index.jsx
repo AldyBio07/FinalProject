@@ -190,10 +190,10 @@ const Promo = ({ initialPromos = [] }) => {
                   {/* Price Section */}
                   <div className="flex items-baseline gap-2 mb-4">
                     <span className="text-2xl font-bold text-blue-600">
-                      ${promo.promo_discount_price}
+                      Rp.{promo.promo_discount_price}
                     </span>
                     <span className="text-sm text-gray-400">
-                      Min. ${promo.minimum_claim_price}
+                      Min. Rp.{promo.minimum_claim_price}
                     </span>
                   </div>
 

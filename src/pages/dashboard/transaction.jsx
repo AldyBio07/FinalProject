@@ -494,7 +494,7 @@ const AdminTransaction = ({ transactions, error }) => {
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Total Amount:</span>
                     <span className="font-medium text-gray-900">
-                      ${selectedTransaction.totalAmount}
+                      Rp.{selectedTransaction.totalAmount}
                     </span>
                   </div>
                   <div className="flex justify-between">

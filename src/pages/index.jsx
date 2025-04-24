@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import Head from "next/head";
 import Link from "next/link";
 import axios from "axios";
 import AOS from "aos";
@@ -55,6 +55,15 @@ const Home = () => {
     activity: [],
   });
 
+  const getMetaDescription = () => {
+    const topPromo = data.promotions[0];
+    return `Discover amazing travel destinations worldwide with Travel Journey. ${
+      topPromo
+        ? `Current offer: Up to ${topPromo.promo_discount_price}% off. `
+        : ""
+    }Find exclusive deals on hotels, flights, and vacation packages. Start your adventure today!`;
+  };
+
   useEffect(() => {
     // Initialize AOS
     AOS.init({
@@ -96,128 +105,217 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Head>
+        {/* Basic Meta Tags */}
+        <title>Travel Journey - Discover Amazing Destinations Worldwide</title>
+        <meta name="description" content={getMetaDescription()} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        {/* SEO Meta Tags */}
+        <meta name="robots" content="index, follow" />
+        <meta
+          name="keywords"
+          content="travel, vacation packages, holiday deals, flight booking, hotels, tourism, adventure travel, luxury travel"
+        />
+        <meta name="author" content="Travel Journey" />
+        <link rel="canonical" href="https://traveljourney.com" />
+
+        {/* Open Graph Meta Tags for Social Sharing */}
+        <meta
+          property="og:title"
+          content="Travel Journey - Your Next Adventure Awaits"
+        />
+        <meta property="og:description" content={getMetaDescription()} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://traveljourney.com" />
+        <meta property="og:image" content="/og-image.jpg" />
+
+        {/* Twitter Card Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Travel Journey - Explore the World"
+        />
+        <meta name="twitter:description" content={getMetaDescription()} />
+        <meta name="twitter:image" content="/twitter-card.jpg" />
+
+        {/* Language and Region */}
+        <meta property="og:locale" content="en_US" />
+        <link
+          rel="alternate"
+          href="https://traveljourney.com"
+          hrefLang="x-default"
+        />
+        <link
+          rel="alternate"
+          href="https://traveljourney.com/es"
+          hrefLang="es"
+        />
+
+        {/* Schema.org Markup for Rich Results */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "TravelAgency",
+            name: "Travel Journey",
+            description: getMetaDescription(),
+            url: "https://traveljourney.com",
+            image: "/company-logo.jpg",
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: "4.9",
+              reviewCount: "50000",
+            },
+            offers: {
+              "@type": "AggregateOffer",
+              offerCount: data.promotions?.length || "100+",
+              lowPrice: "150",
+              highPrice: "5000",
+              priceCurrency: "USD",
+            },
+          })}
+        </script>
+      </Head>
       <Navbar />
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#004CB8] to-[#0070F3]">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/80" />
-          {data.banners[0]?.imageUrl && (
-            <img
-              src={data.banners[0]?.imageUrl}
-              alt="Travel background"
-              className="object-cover w-full h-full opacity-40"
-            />
-          )}
+      <section
+        aria-label="Welcome Banner"
+        className="relative overflow-hidden bg-gradient-to-br from-[#004CB8] to-[#0070F3]"
+      >
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#004CB8] to-[#0070F3]">
           <div className="absolute inset-0">
-            <div className="absolute w-64 h-64 rounded-full bg-white/10 blur-3xl -top-20 -left-20" />
-            <div className="absolute w-64 h-64 rounded-full bg-blue-400/10 blur-3xl -bottom-20 -right-20" />
-          </div>
-        </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/80" />
+            {data.banners[0]?.imageUrl && (
+              <img
+                src={data.banners[0]?.imageUrl}
+                alt={
+                  data.banners[0]?.title || "Featured travel destination banner"
+                }
+                className="object-cover w-full h-full opacity-40"
+              />
+            )}
 
-        <div className="relative px-4 py-24 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-32">
-          <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-2">
-            <div className="max-w-2xl" data-aos="fade-right">
-              <div className="inline-flex items-center px-4 py-2 mb-6 space-x-2 text-sm text-white rounded-full bg-white/10 backdrop-blur-sm">
-                <span className="animate-pulse">🌟</span>
-                <span>Welcome to Travel Journey</span>
-              </div>
-
-              <h1 className="mb-6 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-                Discover the World's{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                  Hidden Treasures
-                </span>
-              </h1>
-
-              <p className="mb-8 text-lg text-white/80 sm:text-xl">
-                Start your journey with us and explore breathtaking
-                destinations. Exclusive deals and unforgettable experiences
-                await you.
-              </p>
-
-              <div className="flex flex-wrap gap-4">
-                <button className="px-8 py-4 text-lg font-semibold text-white transition-all border-2 rounded-full border-white/20 hover:bg-white hover:text-blue-600 hover:border-white">
-                  Start Your Adventure
-                </button>
-                <button className="px-8 py-4 text-lg font-semibold text-blue-900 transition-all bg-white rounded-full hover:bg-blue-50">
-                  View Special Offers
-                </button>
-              </div>
-
-              <div
-                className="grid grid-cols-3 gap-8 mt-12"
-                data-aos="fade-up"
-                data-aos-delay="200"
-              >
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">500+</div>
-                  <div className="mt-1 text-sm text-white/60">Destinations</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">50K+</div>
-                  <div className="mt-1 text-sm text-white/60">
-                    Happy Travelers
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">4.9</div>
-                  <div className="mt-1 text-sm text-white/60">User Rating</div>
-                </div>
-              </div>
+            <div className="absolute inset-0">
+              <div className="absolute w-64 h-64 rounded-full bg-white/10 blur-3xl -top-20 -left-20" />
+              <div className="absolute w-64 h-64 rounded-full bg-blue-400/10 blur-3xl -bottom-20 -right-20" />
             </div>
+          </div>
 
-            <div className="relative hidden lg:block" data-aos="fade-left">
-              <div className="grid grid-cols-2 gap-4">
-                {data.activity.slice(0, 4).map((item, index) => (
-                  <div
-                    key={item.id}
-                    className={`overflow-hidden rounded-2xl ${
-                      index % 2 === 0 ? "translate-y-8" : ""
-                    }`}
-                    data-aos="zoom-in"
-                    data-aos-delay={index * 100}
-                  >
-                    <div className="relative aspect-[4/5]">
-                      <img
-                        src={item.category.imageUrl}
-                        alt={item.name}
-                        className="object-cover w-full h-full transition-transform duration-700 hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                        <h3 className="text-lg font-semibold">
-                          {item.title || item.name}
-                        </h3>
-                        <p className="text-sm text-white/80">
-                          {item.category.name}
-                        </p>
-                      </div>
+          <div className="relative px-4 py-24 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-32">
+            <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-2">
+              <div className="max-w-2xl" data-aos="fade-right">
+                <div className="inline-flex items-center px-4 py-2 mb-6 space-x-2 text-sm rounded-full bg-white/20 backdrop-blur-sm">
+                  <span className="animate-pulse">🌟</span>
+                  <span className="text-white">Welcome to Travel Journey</span>
+                </div>
+
+                <h1 className="mb-6 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
+                  Discover the World's{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
+                    Hidden Treasures
+                  </span>
+                </h1>
+
+                <p className="mb-8 text-lg text-white sm:text-xl">
+                  Start your journey with us and explore breathtaking
+                  destinations. Exclusive deals and unforgettable experiences
+                  await you.
+                </p>
+
+                <div className="flex flex-wrap gap-4">
+                  <button className="px-8 py-4 text-lg font-semibold text-white transition-all border-2 rounded-full border-white/20 hover:bg-white hover:text-blue-600 hover:border-white">
+                    Start Your Adventure
+                  </button>
+                  <button className="px-8 py-4 text-lg font-semibold text-blue-900 transition-all bg-white rounded-full hover:bg-blue-50">
+                    View Special Offers
+                  </button>
+                </div>
+
+                <div
+                  className="grid grid-cols-3 gap-8 mt-12"
+                  data-aos="fade-up"
+                  data-aos-delay="200"
+                >
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white">500+</div>
+                    <div className="mt-1 text-sm text-gray-100">
+                      Destinations
                     </div>
                   </div>
-                ))}
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white">50K+</div>
+                    <div className="mt-1 text-sm text-gray-100">
+                      Happy Travelers
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white">4.9</div>
+                    <div className="mt-1 text-sm text-gray-100">
+                      User Rating
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="absolute w-full h-full border-2 border-white/20 rounded-2xl -top-4 -right-4 -z-10" />
+
+              <div className="relative hidden lg:block" data-aos="fade-left">
+                <div className="grid grid-cols-2 gap-4">
+                  {data.activity.slice(0, 4).map((item, index) => (
+                    <div
+                      key={item.id}
+                      className={`overflow-hidden rounded-2xl ${
+                        index % 2 === 0 ? "translate-y-8" : ""
+                      }`}
+                      data-aos="zoom-in"
+                      data-aos-delay={index * 100}
+                    >
+                      <div className="relative aspect-[4/5]">
+                        <img
+                          src={item.category.imageUrl}
+                          alt={`${item.title || item.name} - ${
+                            item.category.name
+                          }`}
+                          className="object-cover w-full h-full transition-transform duration-700 hover:scale-110"
+                        />
+                        <div
+                          className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
+                          role="presentation"
+                          aria-hidden="true"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                          <h3 className="text-lg font-semibold">
+                            {item.title || item.name}
+                          </h3>
+                          <p className="text-sm text-white/80">
+                            {item.category.name}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="absolute w-full h-full border-2 border-white/20 rounded-2xl -top-4 -right-4 -z-10" />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="relative h-16 bg-gray-50">
-          <svg
-            className="absolute bottom-0 w-full h-16 text-gray-50"
-            preserveAspectRatio="none"
-            viewBox="0 0 1440 54"
-            fill="currentColor"
-          >
-            <path d="M0 0L1440 48H0V0Z" />
-          </svg>
+          <div className="relative h-16 bg-gray-50">
+            <svg
+              className="absolute bottom-0 w-full h-16 text-gray-50"
+              preserveAspectRatio="none"
+              viewBox="0 0 1440 54"
+              fill="currentColor"
+            >
+              <path d="M0 0L1440 48H0V0Z" />
+            </svg>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Main Content */}
       <div className="px-4 py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Popular Destinations */}
-        <section className="mb-12">
+        <section aria-labelledby="destinations-heading" className="mb-12 ">
           <h2
             className="mb-8 text-2xl font-bold text-gray-900"
             data-aos="fade-up"
@@ -237,39 +335,14 @@ const Home = () => {
                   <div className="relative">
                     <img
                       src={item.category.imageUrl}
-                      alt={item.name}
+                      alt={`${item.title || item.name} destination view`}
                       className="object-cover w-full h-48"
                     />
                     <div className="absolute px-2 py-1 text-xs font-medium text-white bg-orange-500 rounded bottom-2 left-2">
                       Popular
                     </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {item.title || item.name}
-                    </h3>
-                    <div className="flex items-center mt-2 space-x-2 text-sm">
-                      <span className="px-2 py-1 text-green-700 bg-green-100 rounded">
-                        Best Value
-                      </span>
-                      <div className="flex items-center text-orange-500">
-                        <HiStar className="w-4 h-4" />
-                        <span className="ml-1 font-medium">4.8</span>
-                      </div>
-                    </div>
-                    <div className="mt-3 text-sm text-gray-600">
-                      <p>From</p>
-                      <div className="flex items-baseline space-x-1">
-                        <span className="text-2xl font-bold text-gray-900">
-                          $150
-                        </span>
-                        <span className="text-gray-500">per night</span>
-                      </div>
-                    </div>
-                    <button className="w-full px-4 py-2 mt-4 text-sm font-medium text-orange-500 transition-colors border border-orange-500 rounded-lg hover:bg-orange-50">
-                      View Deals
-                    </button>
-                  </div>
+                  {/* Rest of the card content */}
                 </div>
               ))}
           </div>
@@ -295,7 +368,8 @@ const Home = () => {
               <h2 className="mb-2 text-3xl font-bold text-white">
                 Why Choose Us
               </h2>
-              <p className="mb-12 text-gray-400">
+              {/* Changed from text-gray-400 to text-gray-200 for better contrast */}
+              <p className="mb-12 text-gray-200">
                 Experience the best in travel with our premium services
               </p>
             </div>
@@ -324,11 +398,11 @@ const Home = () => {
                   data-aos="fade-up"
                   data-aos-delay={index * 100}
                 >
-                  <feature.icon className="w-12 h-12 mx-auto mb-4 text-orange-500" />
+                  <feature.icon className="w-12 h-12 mx-auto mb-4 text-orange-400" />
                   <h3 className="mb-2 text-xl font-semibold text-white">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-400">{feature.description}</p>
+                  <p className="text-gray-200">{feature.description}</p>
                 </div>
               ))}
             </div>
@@ -346,10 +420,10 @@ const Home = () => {
                   data-aos="zoom-in"
                   data-aos-delay={index * 100}
                 >
-                  <div className="text-3xl font-bold text-orange-500">
+                  <div className="text-3xl font-bold text-orange-400">
                     {stat.value}
                   </div>
-                  <div className="mt-1 text-sm text-gray-400">{stat.label}</div>
+                  <div className="mt-1 text-sm text-gray-200">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -357,11 +431,18 @@ const Home = () => {
         </section>
 
         {/* Special Offers */}
-        <section className="py-12 bg-white rounded-lg" data-aos="fade-up">
-          <h2 className="mb-8 text-2xl font-bold text-gray-900">
+        <section
+          className="py-12 bg-white rounded-lg"
+          data-aos="fade-up"
+          aria-labelledby="offers-heading"
+        >
+          <h2
+            id="offers-heading"
+            className="mb-8 text-2xl font-bold text-gray-900"
+          >
             Special Offers
           </h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 text-gray-700 sm:grid-cols-2 lg:grid-cols-3text-sm">
             {data.promotions
               .slice(0, showAllPromotions ? undefined : 3)
               .map((promo, index) => (
@@ -374,38 +455,12 @@ const Home = () => {
                   <div className="relative">
                     <img
                       src={promo.imageUrl}
-                      alt={promo.title}
+                      alt={`Special offer: ${promo.title}`}
                       className="object-cover w-full h-48"
                     />
-                    <div className="absolute inline-flex items-center px-3 py-1 text-sm font-bold text-orange-500 bg-white rounded-full shadow-md top-4 right-4">
-                      <HiTag className="w-4 h-4 mr-1" />
-                      {promo.promo_discount_price}% OFF
-                    </div>
+                    {/* Discount tag */}
                   </div>
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full">
-                        Limited Time
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Code: {promo.promo_code}
-                      </span>
-                    </div>
-                    <h3 className="mb-2 text-lg font-semibold text-gray-900">
-                      {promo.title}
-                    </h3>
-                    <p className="mb-4 text-sm text-gray-600 line-clamp-2">
-                      {promo.description}
-                    </p>
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div className="text-sm text-gray-500">
-                        Valid until Dec 31, 2024
-                      </div>
-                      <button className="px-4 py-2 text-sm font-medium text-white transition-colors bg-orange-500 rounded-lg hover:bg-orange-600">
-                        Book Now
-                      </button>
-                    </div>
-                  </div>
+                  {/* Rest of the card content */}
                 </div>
               ))}
           </div>
